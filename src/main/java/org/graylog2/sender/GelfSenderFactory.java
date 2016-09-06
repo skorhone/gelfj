@@ -41,6 +41,10 @@ public class GelfSenderFactory {
 				gelfSender = new GelfUDPSender(configuration.getGraylogHost(), configuration.getGraylogPort(),
 						configuration.getSocketSendBufferSize());
 			}
+			if (configuration.isThreaded()) {
+				gelfSender = new GelfThreadedSender(gelfSender, configuration.getThreadedQueueTimeout(),
+						configuration.getThreadedQueueMaxDepth());
+			}
 			return gelfSender;
 		} catch (UnknownHostException e) {
 			throw new GelfSenderConfigurationException("Unknown Graylog2 hostname:" + configuration.getGraylogHost(),

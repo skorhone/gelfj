@@ -20,9 +20,11 @@ public class JULConfigurationManager {
 	}
 
 	public static GelfSenderConfiguration getGelfSenderConfiguration(JULProperties properties) {
-		final String port = properties.getProperty("graylogPort");
+		String port = properties.getProperty("graylogPort");
 		String sendBufferSize = properties.getProperty("socketSendBufferSize");
 		String maxRetries = properties.getProperty("amqpMaxRetries");
+		String queueTimeout = properties.getProperty("threadedQueueTimeout");
+		String queueMaxDepth = properties.getProperty("threadedQueueMaxDepth");
 
 		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
 		configuration.setGraylogHost(properties.getProperty("graylogHost"));
@@ -34,6 +36,13 @@ public class JULConfigurationManager {
 			configuration.setSocketSendBufferSize(Integer.parseInt(sendBufferSize));
 		}
 		configuration.setTcpKeepalive("true".equalsIgnoreCase(properties.getProperty("tcpKeepalive")));
+		configuration.setThreaded("true".equalsIgnoreCase(properties.getProperty("threaded")));
+		if (queueTimeout != null) {
+			configuration.setThreadedQueueTimeout(Integer.valueOf(queueTimeout));
+		}
+		if (queueMaxDepth != null) {
+			configuration.setThreadedQueueMaxDepth(Integer.valueOf(queueMaxDepth));
+		}
 		configuration.setAmqpExchangeName(properties.getProperty("amqpExchangeName"));
 		configuration.setAmqpRoutingKey(properties.getProperty("amqpRoutingKey"));
 		if (maxRetries != null) {

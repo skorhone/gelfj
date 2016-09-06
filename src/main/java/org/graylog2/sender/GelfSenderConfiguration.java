@@ -7,11 +7,16 @@ public class GelfSenderConfiguration {
 	private String amqpExchangeName;
 	private String amqpRoutingKey;
 	private boolean tcpKeepalive;
+	private boolean threaded;
+	private int threadedQueueTimeout;
+	private int threadedQueueMaxDepth;
 	private int socketSendBufferSize;
 	private int amqpMaxRetries;
 
 	public GelfSenderConfiguration() {
 		this.graylogPort = 12201;
+		this.threadedQueueMaxDepth = 1000;
+		this.threadedQueueTimeout = 1000;
 	}
 
 	public String getGraylogHost() {
@@ -61,13 +66,37 @@ public class GelfSenderConfiguration {
 	public void setSocketSendBufferSize(int socketSendBufferSize) {
 		this.socketSendBufferSize = socketSendBufferSize;
 	}
-	
+
 	public boolean isTcpKeepalive() {
 		return tcpKeepalive;
 	}
-	
+
 	public void setTcpKeepalive(boolean tcpKeepalive) {
 		this.tcpKeepalive = tcpKeepalive;
+	}
+
+	public boolean isThreaded() {
+		return threaded;
+	}
+
+	public void setThreaded(boolean threaded) {
+		this.threaded = threaded;
+	}
+
+	public int getThreadedQueueTimeout() {
+		return threadedQueueTimeout;
+	}
+
+	public void setThreadedQueueTimeout(int threadedQueueTimeout) {
+		this.threadedQueueTimeout = threadedQueueTimeout;
+	}
+
+	public int getThreadedQueueMaxDepth() {
+		return threadedQueueMaxDepth;
+	}
+
+	public void setThreadedQueueMaxDepth(int threadedQueueMaxDepth) {
+		this.threadedQueueMaxDepth = threadedQueueMaxDepth;
 	}
 
 	public int getAmqpMaxRetries() {
