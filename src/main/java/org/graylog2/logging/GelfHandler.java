@@ -2,6 +2,7 @@ package org.graylog2.logging;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.ErrorManager;
 import java.util.logging.Filter;
 import java.util.logging.Handler;
@@ -127,7 +128,13 @@ public class GelfHandler extends Handler {
 		if (null != hostConfiguration.getFacility()) {
 			gelfMessage.setFacility(hostConfiguration.getFacility());
 		}
-		for (final Map.Entry<String, String> entry : fields.entrySet()) {
+        if (record instanceof GelfLogRecord) {
+        	GelfLogRecord gelfLogRecord = (GelfLogRecord)record;
+        	for (Entry<String, Object> entry : gelfLogRecord.getFields().entrySet()) {
+        		gelfMessage.addField(entry.getKey(), entry.getValue());
+        	}
+        }
+		for (Entry<String, String> entry : fields.entrySet()) {
 			gelfMessage.addField(entry.getKey(), entry.getValue());
 		}
 		return gelfMessage;
