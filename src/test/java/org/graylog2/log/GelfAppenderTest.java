@@ -1,9 +1,7 @@
 package org.graylog2.log;
 
 import org.apache.log4j.*;
-import org.apache.log4j.spi.ErrorHandler;
 import org.apache.log4j.spi.LoggingEvent;
-import org.graylog2.*;
 import org.graylog2.message.GelfMessage;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderResult;
@@ -124,12 +122,10 @@ public class GelfAppenderTest {
 
 		assertEquals(new Integer(200), gelfSender.getLastMessage().getAdditonalFields().get("foo"));
 		assertNull(gelfSender.getLastMessage().getAdditonalFields().get("non-existent"));
-
 	}
 
 	@Test
 	public void handleNDC() {
-
 		gelfAppender.setAddExtendedInformation(true);
 
 		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, "",

@@ -33,6 +33,7 @@ public class JULConfigurationManager {
 		if (sendBufferSize != null) {
 			configuration.setSocketSendBufferSize(Integer.parseInt(sendBufferSize));
 		}
+		configuration.setTcpKeepalive("true".equalsIgnoreCase(properties.getProperty("tcpKeepalive")));
 		configuration.setAmqpExchangeName(properties.getProperty("amqpExchangeName"));
 		configuration.setAmqpRoutingKey(properties.getProperty("amqpRoutingKey"));
 		if (maxRetries != null) {

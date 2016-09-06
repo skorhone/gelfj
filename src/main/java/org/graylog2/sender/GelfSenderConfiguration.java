@@ -6,6 +6,7 @@ public class GelfSenderConfiguration {
 	private String amqpURI;
 	private String amqpExchangeName;
 	private String amqpRoutingKey;
+	private boolean tcpKeepalive;
 	private int socketSendBufferSize;
 	private int amqpMaxRetries;
 
@@ -59,6 +60,14 @@ public class GelfSenderConfiguration {
 
 	public void setSocketSendBufferSize(int socketSendBufferSize) {
 		this.socketSendBufferSize = socketSendBufferSize;
+	}
+	
+	public boolean isTcpKeepalive() {
+		return tcpKeepalive;
+	}
+	
+	public void setTcpKeepalive(boolean tcpKeepalive) {
+		this.tcpKeepalive = tcpKeepalive;
 	}
 
 	public int getAmqpMaxRetries() {

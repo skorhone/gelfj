@@ -13,14 +13,16 @@ public class GelfTCPSender implements GelfSender {
 	private String host;
 	private int port;
 	private int sendBufferSize;
+	private boolean keepalive;
 	private TCPBufferBuilder bufferBuilder;
 	private Socket socket;
 	private OutputStream os;
 
-	public GelfTCPSender(String host, int port, int sendBufferSize) throws IOException {
+	public GelfTCPSender(String host, int port, int sendBufferSize, boolean keepalive) throws IOException {
 		this.host = host;
 		this.port = port;
 		this.sendBufferSize = sendBufferSize;
+		this.keepalive = keepalive;
 		this.bufferBuilder = new TCPBufferBuilder();
 	}
 
@@ -43,6 +45,7 @@ public class GelfTCPSender implements GelfSender {
 	private void connect() throws UnknownHostException, IOException, SocketException {
 		socket = new Socket(host, port);
 		socket.setSendBufferSize(sendBufferSize);
+		socket.setKeepAlive(keepalive);
 		os = socket.getOutputStream();
 	}
 

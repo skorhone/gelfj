@@ -28,7 +28,7 @@ public class GelfSenderFactory {
 				String tcpGraylogHost = configuration.getGraylogHost().substring(4,
 						configuration.getGraylogHost().length());
 				gelfSender = new GelfTCPSender(tcpGraylogHost, configuration.getGraylogPort(),
-						configuration.getSocketSendBufferSize());
+						configuration.getSocketSendBufferSize(), configuration.isTcpKeepalive());
 			} else if (configuration.getGraylogHost().startsWith("udp:")) {
 				String udpGraylogHost = configuration.getGraylogHost().substring(4,
 						configuration.getGraylogHost().length());

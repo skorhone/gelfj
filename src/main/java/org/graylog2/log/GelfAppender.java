@@ -54,6 +54,14 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		return senderConfiguration.getGraylogPort();
 	}
 
+	public boolean isTcpKeepalive() {
+		return senderConfiguration.isTcpKeepalive();
+	}
+
+	public void setTcpKeepalive(boolean tcpKeepalive) {
+		senderConfiguration.setTcpKeepalive(tcpKeepalive);
+	}
+
 	public void setGraylogPort(int graylogPort) {
 		senderConfiguration.setGraylogPort(graylogPort);
 	}
