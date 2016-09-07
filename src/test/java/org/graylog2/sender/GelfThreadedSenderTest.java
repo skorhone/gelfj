@@ -8,6 +8,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.graylog2.message.GelfMessage;
+import org.graylog2.message.TestGelfMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,15 +31,15 @@ public class GelfThreadedSenderTest {
 	@Test
 	public void testQueueOfferSuccess() {
 		mockSender.allowSend();
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(new GelfMessage()));
+		assertEquals(GelfSenderResult.OK, sender.sendMessage(new TestGelfMessage()));
 	}
 
 	@Test
 	public void testQueueOfferFull() {
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(new GelfMessage()));
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(new GelfMessage()));
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(new GelfMessage()));
-		assertEquals(GelfSenderResult.ERROR_CODE, sender.sendMessage(new GelfMessage()).getCode());
+		assertEquals(GelfSenderResult.OK, sender.sendMessage(new TestGelfMessage()));
+		assertEquals(GelfSenderResult.OK, sender.sendMessage(new TestGelfMessage()));
+		assertEquals(GelfSenderResult.OK, sender.sendMessage(new TestGelfMessage()));
+		assertEquals(GelfSenderResult.ERROR_CODE, sender.sendMessage(new TestGelfMessage()).getCode());
 		mockSender.allowSend();
 		mockSender.allowSend();
 		mockSender.allowSend();
@@ -47,13 +48,13 @@ public class GelfThreadedSenderTest {
 	@Test
 	public void testQueueOfferAfterClose() {
 		sender.close();
-		assertEquals(GelfSenderResult.MESSAGE_NOT_VALID_OR_SHUTTING_DOWN, sender.sendMessage(new GelfMessage()));
+		assertEquals(GelfSenderResult.MESSAGE_NOT_VALID_OR_SHUTTING_DOWN, sender.sendMessage(new TestGelfMessage()));
 	}
 
 	@Test
 	public void testQueueFinishesProcessingAfterClose() {
-		GelfMessage messageOne = new GelfMessage();
-		GelfMessage messageTwo = new GelfMessage();
+		GelfMessage messageOne = new TestGelfMessage();
+		GelfMessage messageTwo = new TestGelfMessage();
 		assertEquals(GelfSenderResult.OK, sender.sendMessage(messageOne));
 		assertEquals(GelfSenderResult.OK, sender.sendMessage(messageTwo));
 		Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {

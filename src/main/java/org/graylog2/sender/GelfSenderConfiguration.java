@@ -1,6 +1,7 @@
 package org.graylog2.sender;
 
 public class GelfSenderConfiguration {
+	private String protocol;
 	private String graylogHost;
 	private int graylogPort;
 	private String amqpURI;
@@ -14,9 +15,41 @@ public class GelfSenderConfiguration {
 	private int amqpMaxRetries;
 
 	public GelfSenderConfiguration() {
+		this.protocol = "udp";
 		this.graylogPort = 12201;
 		this.threadedQueueMaxDepth = 1000;
 		this.threadedQueueTimeout = 1000;
+	}
+
+	public String getGraylogURI() {
+		return protocol + ":" + graylogHost + ":" + graylogPort;
+	}
+
+	public void setGraylogURI(String graylogURI) {
+		if (graylogURI != null) {
+			String[] parts = graylogURI.split(":");
+			if (parts.length == 0 || parts.length > 3) {
+				throw new IllegalArgumentException("Unsupported URI format: " + graylogURI);
+			}
+			if (parts.length == 1) {
+				setGraylogHost(parts[0]);
+			} else if (parts.length == 2) {
+				setProtocol(parts[0]);
+				setGraylogHost(parts[1]);
+			} else if (parts.length == 3) {
+				setProtocol(parts[0]);
+				setGraylogHost(parts[1]);
+				setGraylogPort(Integer.valueOf(parts[2]));
+			}
+		}
+	}
+
+	public String getProtocol() {
+		return protocol;
+	}
+
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
 	}
 
 	public String getGraylogHost() {
@@ -40,7 +73,10 @@ public class GelfSenderConfiguration {
 	}
 
 	public void setAmqpURI(String amqpURI) {
-		this.amqpURI = amqpURI;
+		if (amqpURI != null) {
+			setProtocol("amqp");
+			this.amqpURI = amqpURI;
+		}
 	}
 
 	public String getAmqpExchangeName() {

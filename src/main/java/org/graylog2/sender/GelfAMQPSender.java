@@ -27,15 +27,15 @@ public class GelfAMQPSender implements GelfSender {
 	private final int maxRetries;
 	private final String channelMutex = "channelMutex";
 
-	public GelfAMQPSender(String host, String exchangeName, String routingKey, int maxRetries)
+	public GelfAMQPSender(GelfSenderConfiguration configuration)
 			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
 		factory = new ConnectionFactory();
-		factory.setUri(host);
+		factory.setUri(configuration.getAmqpURI());
 
 		this.bufferBuilder = new AMQPBufferBuilder();
-		this.exchangeName = exchangeName;
-		this.routingKey = routingKey;
-		this.maxRetries = maxRetries;
+		this.exchangeName = configuration.getAmqpExchangeName();
+		this.routingKey = configuration.getAmqpRoutingKey();
+		this.maxRetries = configuration.getAmqpMaxRetries();
 	}
 
 	public GelfSenderResult sendMessage(GelfMessage message) {

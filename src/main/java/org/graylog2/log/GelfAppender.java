@@ -43,11 +43,11 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 	}
 
 	public String getGraylogHost() {
-		return senderConfiguration.getGraylogHost();
+		return senderConfiguration.getGraylogURI();
 	}
 
 	public void setGraylogHost(String graylogHost) {
-		senderConfiguration.setGraylogHost(graylogHost);
+		senderConfiguration.setGraylogURI(graylogHost);
 	}
 
 	public int getGraylogPort() {

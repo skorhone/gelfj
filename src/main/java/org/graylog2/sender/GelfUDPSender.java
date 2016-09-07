@@ -20,10 +20,10 @@ public class GelfUDPSender implements GelfSender {
 
 	private static final int MAX_RETRIES = 5;
 
-	public GelfUDPSender(String host, int port, int sendBufferSize) throws IOException {
-		this.host = host;
-		this.port = port;
-		this.sendBufferSize = sendBufferSize;
+	public GelfUDPSender(GelfSenderConfiguration configuration) throws IOException {
+		this.host = configuration.getGraylogHost();
+		this.port = configuration.getGraylogPort();
+		this.sendBufferSize = configuration.getSocketSendBufferSize();
 		this.bufferBuilder = new UDPBufferBuilder();
 		setChannel(initiateChannel());
 	}

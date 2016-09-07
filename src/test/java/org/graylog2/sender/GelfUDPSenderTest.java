@@ -18,7 +18,10 @@ import static org.junit.Assert.assertThat;
 public class GelfUDPSenderTest extends TestCase {
 	@Test
 	public void testReopenOfChannel() throws IOException {
-		GelfUDPSender gelfUDPSender = new GelfUDPSender("localhost", 1234, 0);
+		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
+		configuration.setGraylogHost("localhost");
+		configuration.setGraylogPort(1234);
+		GelfUDPSender gelfUDPSender = new GelfUDPSender(configuration);
 		assertThat(gelfUDPSender.getChannel().isOpen(), is(true));
 
 		GelfMessage error = new GelfMessage("Test short", "Test long", new Date().getTime(), "ERROR");

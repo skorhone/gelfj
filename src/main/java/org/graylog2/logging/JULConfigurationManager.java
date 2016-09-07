@@ -27,7 +27,7 @@ public class JULConfigurationManager {
 		String queueMaxDepth = properties.getProperty("threadedQueueMaxDepth");
 
 		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
-		configuration.setGraylogHost(properties.getProperty("graylogHost"));
+		configuration.setGraylogURI(properties.getProperty("graylogHost"));
 		if (port != null) {
 			configuration.setGraylogPort(Integer.parseInt(port));
 		}

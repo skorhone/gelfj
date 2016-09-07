@@ -24,22 +24,14 @@ public class GelfSenderFactory {
 			throw new GelfSenderConfigurationException("Graylog2 hostname and amqp uri are both informed!");
 		}
 		try {
-			if (configuration.getGraylogHost().startsWith("tcp:")) {
-				String tcpGraylogHost = configuration.getGraylogHost().substring(4,
-						configuration.getGraylogHost().length());
-				gelfSender = new GelfTCPSender(tcpGraylogHost, configuration.getGraylogPort(),
-						configuration.getSocketSendBufferSize(), configuration.isTcpKeepalive());
-			} else if (configuration.getGraylogHost().startsWith("udp:")) {
-				String udpGraylogHost = configuration.getGraylogHost().substring(4,
-						configuration.getGraylogHost().length());
-				gelfSender = new GelfUDPSender(udpGraylogHost, configuration.getGraylogPort(),
-						configuration.getSocketSendBufferSize());
-			} else if (configuration.getAmqpURI() != null) {
-				gelfSender = new GelfAMQPSender(configuration.getAmqpURI(), configuration.getAmqpExchangeName(),
-						configuration.getAmqpRoutingKey(), configuration.getAmqpMaxRetries());
+			if ("tcp".equalsIgnoreCase(configuration.getProtocol())) {
+				gelfSender = new GelfTCPSender(configuration);
+			} else if ("udp".equalsIgnoreCase(configuration.getProtocol())) {
+				gelfSender = new GelfUDPSender(configuration);
+			} else if ("amqp".equalsIgnoreCase(configuration.getProtocol())) {
+				gelfSender = new GelfAMQPSender(configuration);
 			} else {
-				gelfSender = new GelfUDPSender(configuration.getGraylogHost(), configuration.getGraylogPort(),
-						configuration.getSocketSendBufferSize());
+				throw new GelfSenderConfigurationException("Unsupported protocol: " + configuration.getProtocol());
 			}
 			if (configuration.isThreaded()) {
 				gelfSender = new GelfThreadedSender(gelfSender, configuration.getThreadedQueueTimeout(),

@@ -18,11 +18,11 @@ public class GelfTCPSender implements GelfSender {
 	private Socket socket;
 	private OutputStream os;
 
-	public GelfTCPSender(String host, int port, int sendBufferSize, boolean keepalive) throws IOException {
-		this.host = host;
-		this.port = port;
-		this.sendBufferSize = sendBufferSize;
-		this.keepalive = keepalive;
+	public GelfTCPSender(GelfSenderConfiguration configuration) {
+		this.host = configuration.getGraylogHost();
+		this.port = configuration.getGraylogPort();
+		this.sendBufferSize = configuration.getSocketSendBufferSize();
+		this.keepalive = configuration.isTcpKeepalive();
 		this.bufferBuilder = new TCPBufferBuilder();
 	}
 
