@@ -27,22 +27,17 @@ public class GelfHandler extends Handler {
 	private boolean closed;
 
 	public GelfHandler() {
-		JULProperties properties = new JULProperties(LogManager.getLogManager(), getClass().getName());
-		this.hostConfiguration = JULConfigurationManager.getHostConfiguration(properties);
-		this.senderConfiguration = JULConfigurationManager.getGelfSenderConfiguration(properties);
-
-		configure(properties);
+		configure(new JULProperties(LogManager.getLogManager(), getClass().getName()));
 	}
 
-	public GelfHandler(GelfSenderConfiguration senderConfiguration) {
-		JULProperties properties = new JULProperties(LogManager.getLogManager(), getClass().getName());
-		this.hostConfiguration = JULConfigurationManager.getHostConfiguration(properties);
-		this.senderConfiguration = senderConfiguration;
-
+	public GelfHandler(JULProperties properties) {
 		configure(properties);
 	}
 
 	private void configure(JULProperties properties) {
+		this.hostConfiguration = JULConfigurationManager.getHostConfiguration(properties);
+		this.senderConfiguration = JULConfigurationManager.getGelfSenderConfiguration(properties);
+
 		int fieldNumber = 0;
 		fields = new HashMap<String, String>();
 		while (true) {
@@ -128,12 +123,12 @@ public class GelfHandler extends Handler {
 		if (null != hostConfiguration.getFacility()) {
 			gelfMessage.setFacility(hostConfiguration.getFacility());
 		}
-        if (record instanceof GelfLogRecord) {
-        	GelfLogRecord gelfLogRecord = (GelfLogRecord)record;
-        	for (Entry<String, Object> entry : gelfLogRecord.getFields().entrySet()) {
-        		gelfMessage.addField(entry.getKey(), entry.getValue());
-        	}
-        }
+		if (record instanceof GelfLogRecord) {
+			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
+			for (Entry<String, Object> entry : gelfLogRecord.getFields().entrySet()) {
+				gelfMessage.addField(entry.getKey(), entry.getValue());
+			}
+		}
 		for (Entry<String, String> entry : fields.entrySet()) {
 			gelfMessage.addField(entry.getKey(), entry.getValue());
 		}
