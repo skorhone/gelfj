@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.json.simple.JSONValue;
+import org.graylog2.json.JSON;
 
 public class GelfMessage {
 	private static final String ID_NAME = "id";
@@ -40,38 +40,46 @@ public class GelfMessage {
 	}
 
 	public String toJson() {
-		Map<String, Object> map = new HashMap<String, Object>();
-
-		map.put("version", getVersion());
-		map.put("host", getHost());
-		map.put("short_message", getShortMessage());
-		map.put("full_message", getFullMessage());
-		map.put("timestamp", getTimestamp());
-
-		map.put("facility", getFacility());
-		try {
-			map.put("level", Long.parseLong(getLevel()));
-		} catch (NumberFormatException e) {
-			map.put("level", 6L); // fallback to info
+		StringBuilder sb = new StringBuilder();
+		sb.append("{");
+		sb.append("\"version\": ").append(JSON.encodeQuoted(getVersion())).append(", ");
+		sb.append("\"host\": ").append(JSON.encodeQuoted(getHost())).append(", ");
+		sb.append("\"short_message\": ").append(JSON.encodeQuoted(getShortMessage())).append(", ");
+		sb.append("\"full_message\": ").append(JSON.encodeQuoted(getFullMessage())).append(", ");
+		sb.append("\"timestamp\": ").append(getTimestamp()).append(",");
+		sb.append("\"facility\": ").append(JSON.encodeQuoted(getFacility())).append(",");
+		if (getFile() != null) {
+			sb.append("\"file\": ").append(JSON.encodeQuoted(getFile())).append(",");
 		}
+		sb.append("\"level\": ").append(getLevel()).append(",");
 
-		if (null != getFile()) {
-			map.put("file", getFile());
-		}
-		if (null != getLine()) {
-			try {
-				map.put("line", Long.parseLong(getLine()));
-			} catch (NumberFormatException e) {
-				map.put("line", -1L);
-			}
+		Long line = getLine();
+		if (line != null) {
+			sb.append("\"line\": ").append(line).append(",");
 		}
 
 		for (Map.Entry<String, Object> additionalField : additonalFields.entrySet()) {
 			if (!ID_NAME.equals(additionalField.getKey())) {
-				map.put("_" + additionalField.getKey(), additionalField.getValue());
+				String key = JSON.encodeQuoted("_" + additionalField.getKey());
+				Object objectValue = additionalField.getValue();
+				String value;
+				if (objectValue != null) {
+					if (objectValue instanceof Number) {
+						value = objectValue.toString();
+					} else if (objectValue instanceof Boolean) {
+						value = objectValue.toString();
+					} else {
+						value = JSON.encodeQuoted(additionalField.getValue().toString());
+					}
+				} else {
+					value = "null";
+				}
+				sb.append(key).append(": ").append(value);
 			}
 		}
-		return JSONValue.toJSONString(map);
+		sb.append("}");
+		System.out.println(sb.toString());
+		return sb.toString();
 	}
 
 	public int getCurrentMillis() {
@@ -122,7 +130,14 @@ public class GelfMessage {
 		this.javaTimestamp = javaTimestamp;
 	}
 
-	public String getLevel() {
+	public long getLevel() {
+		long level;
+		try {
+			level = Long.parseLong(this.level);
+		} catch (NumberFormatException e) {
+			// fallback to info
+			level = 6L;
+		}
 		return level;
 	}
 
@@ -138,8 +153,15 @@ public class GelfMessage {
 		this.facility = facility;
 	}
 
-	public String getLine() {
-		return line;
+	public Long getLine() {
+		if (this.line == null) {
+			return null;
+		}
+		try {
+			return Long.parseLong(this.line);
+		} catch (NumberFormatException exception) {
+			return -1L;
+		}
 	}
 
 	public void setLine(String line) {
