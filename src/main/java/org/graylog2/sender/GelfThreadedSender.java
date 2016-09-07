@@ -27,6 +27,9 @@ public class GelfThreadedSender implements GelfSender {
 	}
 
 	public GelfSenderResult sendMessage(GelfMessage message) {
+		if (!message.isValid()) {
+			return GelfSenderResult.MESSAGE_NOT_VALID;
+		}
 		if (isClosed()) {
 			return GelfSenderResult.MESSAGE_NOT_VALID_OR_SHUTTING_DOWN;
 		}
