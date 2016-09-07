@@ -46,16 +46,16 @@ public class GelfMessage {
 		sb.append("\"host\": ").append(JSON.encodeQuoted(getHost())).append(", ");
 		sb.append("\"short_message\": ").append(JSON.encodeQuoted(getShortMessage())).append(", ");
 		sb.append("\"full_message\": ").append(JSON.encodeQuoted(getFullMessage())).append(", ");
-		sb.append("\"timestamp\": ").append(getTimestamp()).append(",");
-		sb.append("\"facility\": ").append(JSON.encodeQuoted(getFacility())).append(",");
+		sb.append("\"timestamp\": ").append(getTimestamp()).append(", ");
+		sb.append("\"facility\": ").append(JSON.encodeQuoted(getFacility())).append(", ");
 		if (getFile() != null) {
-			sb.append("\"file\": ").append(JSON.encodeQuoted(getFile())).append(",");
+			sb.append("\"file\": ").append(JSON.encodeQuoted(getFile())).append(", ");
 		}
-		sb.append("\"level\": ").append(getLevel()).append(",");
+		sb.append("\"level\": ").append(getLevel()).append(", ");
 
 		Long line = getLine();
 		if (line != null) {
-			sb.append("\"line\": ").append(line).append(",");
+			sb.append("\"line\": ").append(line);
 		}
 
 		for (Map.Entry<String, Object> additionalField : additonalFields.entrySet()) {
@@ -74,11 +74,10 @@ public class GelfMessage {
 				} else {
 					value = "null";
 				}
-				sb.append(key).append(": ").append(value);
+				sb.append(", ").append(key).append(": ").append(value);
 			}
 		}
 		sb.append("}");
-		System.out.println(sb.toString());
 		return sb.toString();
 	}
 
