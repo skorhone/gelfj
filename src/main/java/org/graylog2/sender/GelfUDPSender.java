@@ -1,41 +1,42 @@
 package org.graylog2.sender;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
+import java.security.SecureRandom;
 import java.util.Random;
 
 import org.graylog2.message.GelfMessage;
 
 public class GelfUDPSender implements GelfSender {
-	private static final byte[] GELF_CHUNKED_ID = new byte[] { 0x1e, 0x0f };
-	private static final int MAXIMUM_CHUNK_SIZE = 1420;
-
-	private String host;
-	private int port;
+	private String destinationHost;
+	private int destinationPort;
 	private int sendBufferSize;
 	private int maxRetries;
 	private UDPBufferBuilder bufferBuilder;
-	private DatagramChannel channel;
+	private SocketAddress destinationAddress;
+	private DatagramSocket socket;
 
 	public GelfUDPSender(GelfSenderConfiguration configuration, boolean enableRetry) {
-		this.host = configuration.getGraylogHost();
-		this.port = configuration.getGraylogPort();
+		this.destinationHost = configuration.getGraylogHost();
+		this.destinationPort = configuration.getGraylogPort();
 		this.sendBufferSize = configuration.getSocketSendBufferSize();
 		this.maxRetries = enableRetry ? configuration.getMaxRetries() : 0;
 		this.bufferBuilder = new UDPBufferBuilder();
 	}
 
-	private DatagramChannel initiateChannel() throws IOException {
-		DatagramChannel resultingChannel = DatagramChannel.open();
-		DatagramSocket socket = resultingChannel.socket();
-		socket.bind(new InetSocketAddress(0));
+	private void initializeSocket() throws IOException {
+		socket = new DatagramSocket();
+		socket.setBroadcast(false);
 		if (sendBufferSize > 0) {
 			socket.setSendBufferSize(sendBufferSize);
 		}
-		socket.connect(new InetSocketAddress(this.host, this.port));
-		return resultingChannel;
+		destinationAddress = new InetSocketAddress(this.destinationHost, this.destinationPort);
+		socket.connect(destinationAddress);
 	}
 
 	public void sendMessage(GelfMessage message) throws GelfSenderException {
@@ -50,16 +51,17 @@ public class GelfUDPSender implements GelfSender {
 		Exception lastException = null;
 		do {
 			try {
-				if (getChannel() == null || !getChannel().isOpen()) {
-					setChannel(initiateChannel());
+				if (socket == null) {
+					initializeSocket();
 				}
 				for (ByteBuffer buffer : bytesList) {
-					getChannel().write(buffer);
+					socket.send(new DatagramPacket(buffer.array(), buffer.limit(), destinationAddress));
 				}
 				return;
 			} catch (Exception exception) {
 				tries++;
 				lastException = exception;
+				close();
 			}
 		} while (tries <= maxRetries);
 
@@ -67,21 +69,32 @@ public class GelfUDPSender implements GelfSender {
 	}
 
 	public void close() {
-		try {
-			getChannel().close();
-		} catch (IOException ignoredException) {
+		if (socket != null) {
+			socket.close();
+			socket = null;
 		}
 	}
 
-	public DatagramChannel getChannel() {
-		return channel;
+	public DatagramSocket getSocket() {
+		return socket;
 	}
 
-	public void setChannel(DatagramChannel channel) {
-		this.channel = channel;
+	public void setSocket(DatagramSocket socket) {
+		this.socket = socket;
 	}
 
 	public static class UDPBufferBuilder extends BufferBuilder {
+		private static final byte[] GELF_CHUNKED_ID = new byte[] { 0x1e, 0x0f };
+		private static final int MAXIMUM_CHUNK_SIZE = 1420;
+
+		private Random random;
+		private byte[] hostId;
+
+		public UDPBufferBuilder() {
+			this.random = new Random();
+			this.hostId = createHostId();
+		}
+
 		public ByteBuffer[] toUDPBuffers(String message) {
 			byte[] messageBytes = gzipMessage(message);
 			// calculate the length of the datagrams array
@@ -104,8 +117,7 @@ public class GelfUDPSender implements GelfSender {
 
 		private void sliceDatagrams(byte[] messageBytes, ByteBuffer[] datagrams) {
 			int messageLength = messageBytes.length;
-			byte[] messageId = new byte[8];
-			new Random().nextBytes(messageId);
+			byte[] messageId = createMessageId();
 
 			// Reuse length of datagrams array since this is supposed to be the
 			// correct number of datagrams
@@ -127,6 +139,41 @@ public class GelfUDPSender implements GelfSender {
 				datagrams[idx].put(datagram);
 				datagrams[idx].flip();
 			}
+		}
+
+		private byte[] createMessageId() {
+			byte[] messageId = new byte[8];
+			byte[] randomBytes = createHostId();
+			random.nextBytes(randomBytes);
+			System.arraycopy(hostId, 0, messageId, 0, 4);
+			System.arraycopy(randomBytes, 0, messageId, 4, 4);
+			return messageId;
+		}
+
+		private byte[] createHostId() {
+			byte[] hostId = new byte[4];
+			byte[] address = getAddress();
+			hostId[0] = (byte) new SecureRandom().nextInt();
+			hostId[1] = address[0];
+			hostId[2] = address[1];
+			hostId[3] = address[2];
+			return hostId;
+		}
+
+		private byte[] getAddress() {
+			byte[] address = null;
+			try {
+				InetAddress inetAddress = InetAddress.getLocalHost();
+				if (inetAddress != null && !inetAddress.isLoopbackAddress()) {
+					address = inetAddress.getAddress();
+				}
+			} catch (Exception exception) {
+			}
+			if (address == null) {
+				address = new byte[4];
+				new SecureRandom().nextBytes(address);
+			}
+			return address;
 		}
 
 		private byte[] concatByteArray(byte[] first, byte[] second) {

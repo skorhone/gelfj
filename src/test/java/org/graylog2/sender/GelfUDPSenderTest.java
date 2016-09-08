@@ -1,7 +1,6 @@
 package org.graylog2.sender;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,9 +10,7 @@ import org.graylog2.message.GelfMessage;
 import org.graylog2.sender.GelfUDPSender.UDPBufferBuilder;
 import org.junit.Test;
 
-import junit.framework.TestCase;
-
-public class GelfUDPSenderTest extends TestCase {
+public class GelfUDPSenderTest {
 	@Test
 	public void testReopenOfChannel() throws IOException, GelfSenderException {
 		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
@@ -28,12 +25,12 @@ public class GelfUDPSenderTest extends TestCase {
 
 		gelfUDPSender.sendMessage(error);
 
-		gelfUDPSender.getChannel().close();
+		gelfUDPSender.close();
 
-		assertThat(gelfUDPSender.getChannel().isOpen(), is(false));
+		assertNull(gelfUDPSender.getSocket());
 
 		gelfUDPSender.sendMessage(error);
-		assertThat(gelfUDPSender.getChannel().isOpen(), is(true));
+		assertNotNull(gelfUDPSender.getSocket());
 	}
 
 	@Test
