@@ -51,12 +51,11 @@ public class GelfMessage {
 		if (getFile() != null) {
 			sb.append("\"file\": ").append(JSON.encodeQuoted(getFile())).append(", ");
 		}
-		sb.append("\"level\": ").append(getLevel()).append(", ");
-
 		Long line = getLine();
 		if (line != null) {
-			sb.append("\"line\": ").append(line);
+			sb.append("\"line\": ").append(line).append(", ");
 		}
+		sb.append("\"level\": ").append(getLevel());
 
 		for (Map.Entry<String, Object> additionalField : additonalFields.entrySet()) {
 			if (!ID_NAME.equals(additionalField.getKey())) {
