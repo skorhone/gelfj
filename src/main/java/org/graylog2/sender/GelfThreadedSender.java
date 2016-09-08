@@ -16,34 +16,35 @@ public class GelfThreadedSender implements GelfSender {
 	private final GelfSender sender;
 	private final BlockingQueue<GelfMessage> messageQueue;
 	private final int timeout;
+	private final int maxRetries;
 	private Thread thread;
 	private volatile Status status;
 
-	public GelfThreadedSender(GelfSender sender, int timeout, int maxQueueDepth) {
+	public GelfThreadedSender(GelfSender sender, GelfSenderConfiguration configuration) {
 		this.status = Status.ACTIVE;
 		this.sender = sender;
-		this.timeout = timeout;
-		this.messageQueue = new ArrayBlockingQueue<GelfMessage>(maxQueueDepth, true);
+		this.timeout = configuration.getThreadedQueueTimeout();
+		this.maxRetries = configuration.getMaxRetries();
+		this.messageQueue = new ArrayBlockingQueue<GelfMessage>(configuration.getThreadedQueueMaxDepth(), true);
 	}
 
-	public GelfSenderResult sendMessage(GelfMessage message) {
-		if (!message.isValid()) {
-			return GelfSenderResult.MESSAGE_NOT_VALID;
-		}
+	public void sendMessage(GelfMessage message) throws GelfSenderException {
 		if (isClosed()) {
-			return GelfSenderResult.MESSAGE_NOT_VALID_OR_SHUTTING_DOWN;
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+		}
+		if (!message.isValid()) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
 		}
 		if (!isInitialized()) {
 			initialize();
 		}
 		try {
 			if (!messageQueue.offer(message, timeout, TimeUnit.MILLISECONDS)) {
-				throw new InterruptedException("GelfThreadedSender queue is full, discardin message");
+				throw new InterruptedException("GelfThreadedSender queue is full, discarding message");
 			}
-		} catch (InterruptedException exception) {
-			return new GelfSenderResult(GelfSenderResult.ERROR_CODE, exception);
+		} catch (Exception exception) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, exception);
 		}
-		return GelfSenderResult.OK;
 	}
 
 	private void initialize() {
@@ -88,16 +89,28 @@ public class GelfThreadedSender implements GelfSender {
 		private GelfMessage currentMessage;
 
 		public void run() {
+			int retryCount = 0;
 			while (isActive()) {
 				if (currentMessage == null) {
+					retryCount = 0;
 					try {
 						currentMessage = messageQueue.poll(1000, TimeUnit.MILLISECONDS);
 					} catch (InterruptedException ignoredException) {
 					}
 				}
-				if (currentMessage != null) {
-					if (currentMessage == CLOSE_MESSAGE
-							|| GelfSenderResult.OK.equals(sender.sendMessage(currentMessage))) {
+				if (currentMessage == CLOSE_MESSAGE) {
+					currentMessage = null;
+				} else if (currentMessage != null) {
+					try {
+						sender.sendMessage(currentMessage);
+						currentMessage = null;
+					} catch (GelfSenderException exception) {
+						if (exception.getErrorCode() != GelfSenderException.ERROR_CODE_GENERIC_ERROR) {
+							currentMessage = null;
+						}
+					} catch (Exception exception) {
+					}
+					if (currentMessage != null && retryCount++ >= maxRetries) {
 						currentMessage = null;
 					}
 				}

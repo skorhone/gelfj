@@ -13,8 +13,8 @@ import org.graylog2.message.GelfMessage;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderConfigurationException;
+import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
-import org.graylog2.sender.GelfSenderResult;
 import org.json.simple.JSONValue;
 
 /**
@@ -122,12 +122,22 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		senderConfiguration.setAmqpRoutingKey(amqpRoutingKey);
 	}
 
-	public int getAmqpMaxRetries() {
-		return senderConfiguration.getAmqpMaxRetries();
+	public int getMaxRetries() {
+		return senderConfiguration.getMaxRetries();
 	}
 
+	public void setMaxRetries(int amqpMaxRetries) {
+		senderConfiguration.setMaxRetries(amqpMaxRetries);
+	}
+
+	@Deprecated
+	public int getAmqpMaxRetries() {
+		return senderConfiguration.getMaxRetries();
+	}
+
+	@Deprecated
 	public void setAmqpMaxRetries(int amqpMaxRetries) {
-		senderConfiguration.setAmqpMaxRetries(amqpMaxRetries);
+		senderConfiguration.setMaxRetries(amqpMaxRetries);
 	}
 
 	public String getFacility() {
@@ -203,10 +213,11 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		if (getGelfSender() == null) {
 			errorHandler.error("Could not send GELF message. Gelf Sender is not initialised and equals null");
 		} else {
-			GelfSenderResult gelfSenderResult = getGelfSender().sendMessage(gelfMessage);
-			if (!GelfSenderResult.OK.equals(gelfSenderResult)) {
-				errorHandler.error("Error during sending GELF message. Error code: " + gelfSenderResult.getCode() + ".",
-						gelfSenderResult.getException(), ErrorCode.WRITE_FAILURE);
+			try {
+				getGelfSender().sendMessage(gelfMessage);
+			} catch (GelfSenderException exception) {
+				errorHandler.error("Error during sending GELF message. Error code: " + exception.getErrorCode() + ".",
+						exception.getCause(), ErrorCode.WRITE_FAILURE);
 			}
 		}
 	}

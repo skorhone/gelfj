@@ -16,12 +16,12 @@ public class GelfHTTPSender implements GelfSender {
 		url = new URL(configuration.getGraylogURI());
 	}
 
-	public GelfSenderResult sendMessage(GelfMessage message) {
-		if (message.isValid()) {
-			return GelfSenderResult.MESSAGE_NOT_VALID;
-		}
+	public void sendMessage(GelfMessage message) throws GelfSenderException {
 		if (shutdown) {
-			return GelfSenderResult.MESSAGE_NOT_VALID_OR_SHUTTING_DOWN;
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+		}
+		if (!message.isValid()) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
 		}
 		try {
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -42,12 +42,9 @@ public class GelfHTTPSender implements GelfSender {
 				throw new IOException(
 						"Invalid response code: " + responseCode + " expected " + HttpURLConnection.HTTP_ACCEPTED);
 			}
-		} catch (MalformedURLException exception) {
-			return new GelfSenderResult(GelfSenderResult.ERROR_CODE, exception);
-		} catch (IOException exception) {
-			return new GelfSenderResult(GelfSenderResult.ERROR_CODE, exception);
+		} catch (Exception exception) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, exception);
 		}
-		return GelfSenderResult.OK;
 	}
 
 	public void close() {

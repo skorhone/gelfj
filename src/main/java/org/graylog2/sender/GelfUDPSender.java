@@ -15,17 +15,16 @@ public class GelfUDPSender implements GelfSender {
 	private String host;
 	private int port;
 	private int sendBufferSize;
+	private int maxRetries;
 	private UDPBufferBuilder bufferBuilder;
 	private DatagramChannel channel;
 
-	private static final int MAX_RETRIES = 5;
-
-	public GelfUDPSender(GelfSenderConfiguration configuration) throws IOException {
+	public GelfUDPSender(GelfSenderConfiguration configuration, boolean enableRetry) {
 		this.host = configuration.getGraylogHost();
 		this.port = configuration.getGraylogPort();
 		this.sendBufferSize = configuration.getSocketSendBufferSize();
+		this.maxRetries = enableRetry ? configuration.getMaxRetries() : 0;
 		this.bufferBuilder = new UDPBufferBuilder();
-		setChannel(initiateChannel());
 	}
 
 	private DatagramChannel initiateChannel() throws IOException {
@@ -39,32 +38,32 @@ public class GelfUDPSender implements GelfSender {
 		return resultingChannel;
 	}
 
-	public GelfSenderResult sendMessage(GelfMessage message) {
+	public void sendMessage(GelfMessage message) throws GelfSenderException {
 		if (!message.isValid()) {
-			return GelfSenderResult.MESSAGE_NOT_VALID;
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
 		}
-		return sendDatagrams(bufferBuilder.toUDPBuffers(message.toJson()));
+		sendDatagrams(bufferBuilder.toUDPBuffers(message.toJson()));
 	}
 
-	private GelfSenderResult sendDatagrams(ByteBuffer[] bytesList) {
+	private void sendDatagrams(ByteBuffer[] bytesList) throws GelfSenderException {
 		int tries = 0;
 		Exception lastException = null;
 		do {
 			try {
-				if (!getChannel().isOpen()) {
+				if (getChannel() == null || !getChannel().isOpen()) {
 					setChannel(initiateChannel());
 				}
 				for (ByteBuffer buffer : bytesList) {
 					getChannel().write(buffer);
 				}
-				return GelfSenderResult.OK;
-			} catch (IOException e) {
+				return;
+			} catch (Exception exception) {
 				tries++;
-				lastException = e;
+				lastException = exception;
 			}
-		} while (tries <= MAX_RETRIES);
+		} while (tries <= maxRetries);
 
-		return new GelfSenderResult(GelfSenderResult.ERROR_CODE, lastException);
+		throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
 	}
 
 	public void close() {

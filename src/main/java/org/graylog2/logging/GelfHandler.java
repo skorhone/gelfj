@@ -15,8 +15,8 @@ import org.graylog2.message.GelfMessage;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderConfigurationException;
+import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
-import org.graylog2.sender.GelfSenderResult;
 
 public class GelfHandler extends Handler {
 	private static final int MAX_SHORT_MESSAGE_LENGTH = 250;
@@ -88,11 +88,10 @@ public class GelfHandler extends Handler {
 				if (null == gelfSender) {
 					gelfSender = GelfSenderFactory.getInstance().createSender(senderConfiguration);
 				}
-				GelfSenderResult gelfSenderResult = gelfSender.sendMessage(makeMessage(record));
-				if (!GelfSenderResult.OK.equals(gelfSenderResult)) {
-					reportError("Error during sending GELF message. Error code: " + gelfSenderResult.getCode() + ".",
-							gelfSenderResult.getException(), ErrorManager.WRITE_FAILURE);
-				}
+				gelfSender.sendMessage(makeMessage(record));
+			} catch (GelfSenderException exception) {
+				reportError("Error during sending GELF message. Error code: " + exception.getErrorCode() + ".",
+						exception.getCause(), ErrorManager.WRITE_FAILURE);
 			} catch (GelfSenderConfigurationException exception) {
 				reportError(exception.getMessage(), exception.getCauseException(), ErrorManager.WRITE_FAILURE);
 			} catch (Exception exception) {

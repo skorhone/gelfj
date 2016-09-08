@@ -27,17 +27,16 @@ public class GelfSenderFactory {
 			if ("tcp".equals(configuration.getProtocol())) {
 				gelfSender = new GelfTCPSender(configuration);
 			} else if ("udp".equals(configuration.getProtocol())) {
-				gelfSender = new GelfUDPSender(configuration);
+				gelfSender = new GelfUDPSender(configuration, !configuration.isThreaded());
 			} else if ("amqp".equals(configuration.getProtocol())) {
-				gelfSender = new GelfAMQPSender(configuration);
+				gelfSender = new GelfAMQPSender(configuration, !configuration.isThreaded());
 			} else if ("http".equals(configuration.getProtocol()) || "https".equals(configuration.getProtocol())) {
 				gelfSender = new GelfHTTPSender(configuration);
 			} else {
 				throw new GelfSenderConfigurationException("Unsupported protocol: " + configuration.getProtocol());
 			}
 			if (configuration.isThreaded()) {
-				gelfSender = new GelfThreadedSender(gelfSender, configuration.getThreadedQueueTimeout(),
-						configuration.getThreadedQueueMaxDepth());
+				gelfSender = new GelfThreadedSender(gelfSender, configuration);
 			}
 			return gelfSender;
 		} catch (UnknownHostException e) {

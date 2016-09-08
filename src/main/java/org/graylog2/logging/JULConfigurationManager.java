@@ -22,7 +22,10 @@ public class JULConfigurationManager {
 	public static GelfSenderConfiguration getGelfSenderConfiguration(JULProperties properties) {
 		String port = properties.getProperty("graylogPort");
 		String sendBufferSize = properties.getProperty("socketSendBufferSize");
-		String maxRetries = properties.getProperty("amqpMaxRetries");
+		String maxRetries = properties.getProperty("maxRetries");
+		if (maxRetries == null) {
+			maxRetries = properties.getProperty("amqpMaxRetries");
+		}
 		String queueTimeout = properties.getProperty("threadedQueueTimeout");
 		String queueMaxDepth = properties.getProperty("threadedQueueMaxDepth");
 
@@ -46,7 +49,7 @@ public class JULConfigurationManager {
 		configuration.setAmqpExchangeName(properties.getProperty("amqpExchangeName"));
 		configuration.setAmqpRoutingKey(properties.getProperty("amqpRoutingKey"));
 		if (maxRetries != null) {
-			configuration.setAmqpMaxRetries(Integer.valueOf(maxRetries));
+			configuration.setMaxRetries(Integer.valueOf(maxRetries));
 		}
 		return configuration;
 	}

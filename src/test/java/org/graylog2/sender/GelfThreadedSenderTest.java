@@ -2,6 +2,7 @@ package org.graylog2.sender;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -20,7 +21,10 @@ public class GelfThreadedSenderTest {
 	@Before
 	public void setup() {
 		mockSender = new MockGelfSender();
-		sender = new GelfThreadedSender(mockSender, 100, 2);
+		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
+		configuration.setThreadedQueueTimeout(100);
+		configuration.setThreadedQueueMaxDepth(2);
+		sender = new GelfThreadedSender(mockSender, configuration);
 	}
 
 	@After
@@ -29,34 +33,45 @@ public class GelfThreadedSenderTest {
 	}
 
 	@Test
-	public void testQueueOfferSuccess() {
+	public void testQueueOfferSuccess() throws GelfSenderException {
 		mockSender.allowSend();
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(new TestGelfMessage()));
+		sender.sendMessage(new TestGelfMessage());
 	}
 
 	@Test
-	public void testQueueOfferFull() {
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(new TestGelfMessage()));
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(new TestGelfMessage()));
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(new TestGelfMessage()));
-		assertEquals(GelfSenderResult.ERROR_CODE, sender.sendMessage(new TestGelfMessage()).getCode());
-		mockSender.allowSend();
-		mockSender.allowSend();
-		mockSender.allowSend();
+	public void testQueueOfferFull() throws GelfSenderException {
+		sender.sendMessage(new TestGelfMessage());
+		sender.sendMessage(new TestGelfMessage());
+		sender.sendMessage(new TestGelfMessage());
+		try {
+			sender.sendMessage(new TestGelfMessage());
+			fail("Exception is expected");
+		} catch (GelfSenderException exception) {
+			assertEquals(GelfSenderException.ERROR_CODE_GENERIC_ERROR, exception.getErrorCode());
+		} finally {
+			mockSender.allowSend();
+			mockSender.allowSend();
+			mockSender.allowSend();
+		}
 	}
 
 	@Test
 	public void testQueueOfferAfterClose() {
 		sender.close();
-		assertEquals(GelfSenderResult.MESSAGE_NOT_VALID_OR_SHUTTING_DOWN, sender.sendMessage(new TestGelfMessage()));
+		try {
+			sender.sendMessage(new TestGelfMessage());
+			fail("Exception is expected");
+		} catch (GelfSenderException exception) {
+			assertEquals(GelfSenderException.ERROR_CODE_SHUTTING_DOWN, exception.getErrorCode());
+		}
 	}
 
 	@Test
-	public void testQueueFinishesProcessingAfterClose() {
+	public void testQueueFinishesProcessingAfterClose() throws GelfSenderException {
 		GelfMessage messageOne = new TestGelfMessage();
 		GelfMessage messageTwo = new TestGelfMessage();
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(messageOne));
-		assertEquals(GelfSenderResult.OK, sender.sendMessage(messageTwo));
+		sender.sendMessage(messageOne);
+		sender.sendMessage(messageTwo);
 		Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
 			public void run() {
 				mockSender.allowSend();
@@ -76,13 +91,12 @@ public class GelfThreadedSenderTest {
 			semaphore = new Semaphore(0);
 		}
 
-		public GelfSenderResult sendMessage(GelfMessage message) {
+		public void sendMessage(GelfMessage message) {
 			try {
 				semaphore.acquire();
 			} catch (InterruptedException exception) {
 			}
 			this.lastMessage = message;
-			return GelfSenderResult.OK;
 		}
 
 		public GelfMessage getLastMessage() {

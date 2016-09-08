@@ -1,6 +1,9 @@
 package org.graylog2.sender;
 
 public class GelfSenderConfiguration {
+	private static final String DEFAULT_PROTOCOL = "udp";
+	public static final int DEFAULT_PORT = 12201;
+
 	private String protocol;
 	private String graylogURI;
 	private String graylogHost;
@@ -13,11 +16,12 @@ public class GelfSenderConfiguration {
 	private int threadedQueueTimeout;
 	private int threadedQueueMaxDepth;
 	private int socketSendBufferSize;
-	private int amqpMaxRetries;
+	private int maxRetries;
 
 	public GelfSenderConfiguration() {
-		this.protocol = "udp";
-		this.graylogPort = 12201;
+		this.protocol = DEFAULT_PROTOCOL;
+		this.graylogPort = DEFAULT_PORT;
+		this.maxRetries = 5;
 		this.threadedQueueMaxDepth = 1000;
 		this.threadedQueueTimeout = 1000;
 	}
@@ -141,11 +145,11 @@ public class GelfSenderConfiguration {
 		this.threadedQueueMaxDepth = threadedQueueMaxDepth;
 	}
 
-	public int getAmqpMaxRetries() {
-		return amqpMaxRetries;
+	public int getMaxRetries() {
+		return maxRetries;
 	}
 
-	public void setAmqpMaxRetries(int amqpMaxRetries) {
-		this.amqpMaxRetries = amqpMaxRetries;
+	public void setMaxRetries(int maxRetries) {
+		this.maxRetries = maxRetries;
 	}
 }

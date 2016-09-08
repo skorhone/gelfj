@@ -27,7 +27,7 @@ public class GelfAMQPSender implements GelfSender {
 	private final int maxRetries;
 	private final String channelMutex = "channelMutex";
 
-	public GelfAMQPSender(GelfSenderConfiguration configuration)
+	public GelfAMQPSender(GelfSenderConfiguration configuration, boolean enableRetry)
 			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
 		factory = new ConnectionFactory();
 		factory.setUri(configuration.getAmqpURI());
@@ -35,14 +35,16 @@ public class GelfAMQPSender implements GelfSender {
 		this.bufferBuilder = new AMQPBufferBuilder();
 		this.exchangeName = configuration.getAmqpExchangeName();
 		this.routingKey = configuration.getAmqpRoutingKey();
-		this.maxRetries = configuration.getAmqpMaxRetries();
+		this.maxRetries = enableRetry ? configuration.getMaxRetries() : 0;
 	}
 
-	public GelfSenderResult sendMessage(GelfMessage message) {
-		if (shutdown || !message.isValid()) {
-			return GelfSenderResult.MESSAGE_NOT_VALID_OR_SHUTTING_DOWN;
+	public void sendMessage(GelfMessage message) throws GelfSenderException {
+		if (shutdown) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
 		}
-
+		if (!message.isValid()) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
+		}
 		// set unique id to identify duplicates after connection failure
 		String uuid = UUID.randomUUID().toString();
 		String messageid = "gelf" + message.getHost() + message.getFacility() + message.getTimestamp() + uuid;
@@ -72,16 +74,15 @@ public class GelfAMQPSender implements GelfSender {
 				channel.basicPublish(exchangeName, routingKey, properties,
 						bufferBuilder.toAMQPBuffer(message.toJson()).array());
 				channel.waitForConfirms();
-
-				return GelfSenderResult.OK;
-			} catch (Exception e) {
+				return;
+			} catch (Exception exception) {
 				channel = null;
 				tries++;
-				lastException = e;
+				lastException = exception;
 			}
 		} while (tries <= maxRetries || maxRetries < 0);
 
-		return new GelfSenderResult(GelfSenderResult.ERROR_CODE, lastException);
+		throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
 	}
 
 	public void close() {

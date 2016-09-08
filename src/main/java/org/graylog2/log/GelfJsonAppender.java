@@ -5,11 +5,12 @@ import java.util.Map;
 import org.apache.log4j.spi.ErrorCode;
 import org.apache.log4j.spi.LoggingEvent;
 import org.graylog2.message.GelfMessage;
-import org.graylog2.sender.GelfSenderResult;
+import org.graylog2.sender.GelfSenderException;
 import org.json.simple.JSONValue;
 
 /**
- * A GelfAppender which will parse the given JSON message into additional fields in GELF
+ * A GelfAppender which will parse the given JSON message into additional fields
+ * in GELF
  *
  * @author Anton Yakimov
  * @author Jochen Schalanda
@@ -17,28 +18,29 @@ import org.json.simple.JSONValue;
  */
 public class GelfJsonAppender extends GelfAppender {
 
-  @Override
-  protected void append(final LoggingEvent event) {
-    GelfMessage gelfMessage = GelfMessageFactory.makeMessage(layout, event, this);
+	@Override
+	protected void append(final LoggingEvent event) {
+		GelfMessage gelfMessage = GelfMessageFactory.makeMessage(layout, event, this);
 
-    @SuppressWarnings("unchecked")
-    Map<String, String> fields = (Map<String, String>) JSONValue.parse(event.getMessage().toString());
+		@SuppressWarnings("unchecked")
+		Map<String, String> fields = (Map<String, String>) JSONValue.parse(event.getMessage().toString());
 
-    if (fields != null) {
-      for (String key : fields.keySet()) {
-        gelfMessage.getAdditonalFields().put(key, fields.get(key));
-      }
-    }
+		if (fields != null) {
+			for (String key : fields.keySet()) {
+				gelfMessage.getAdditonalFields().put(key, fields.get(key));
+			}
+		}
 
-    if (getGelfSender() == null) {
-      errorHandler.error("Could not send GELF message. Gelf Sender is not initialised and equals null");
-    } else {
-      GelfSenderResult gelfSenderResult = getGelfSender().sendMessage(gelfMessage);
-      if (!GelfSenderResult.OK.equals(gelfSenderResult)) {
-        errorHandler.error("Error during sending GELF message. Error code: " + gelfSenderResult.getCode() + ".",
-            gelfSenderResult.getException(), ErrorCode.WRITE_FAILURE);
-      }
-    }
-  }
+		if (getGelfSender() == null) {
+			errorHandler.error("Could not send GELF message. Gelf Sender is not initialised and equals null");
+		} else {
+			try {
+				getGelfSender().sendMessage(gelfMessage);
+			} catch (GelfSenderException exception) {
+				errorHandler.error("Error during sending GELF message. Error code: " + exception.getErrorCode() + ".",
+						exception.getCause(), ErrorCode.WRITE_FAILURE);
+			}
+		}
+	}
 
 }

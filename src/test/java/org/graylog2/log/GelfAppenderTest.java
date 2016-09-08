@@ -1,20 +1,25 @@
 package org.graylog2.log;
 
-import org.apache.log4j.*;
-import org.apache.log4j.spi.LoggingEvent;
-import org.graylog2.message.GelfMessage;
-import org.graylog2.sender.GelfSender;
-import org.graylog2.sender.GelfSenderResult;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import org.apache.log4j.Category;
+import org.apache.log4j.Level;
+import org.apache.log4j.MDC;
+import org.apache.log4j.NDC;
+import org.apache.log4j.spi.LoggingEvent;
+import org.graylog2.message.GelfMessage;
+import org.graylog2.sender.GelfSender;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Anton Yakimov
@@ -170,9 +175,8 @@ public class GelfAppenderTest {
 	private class TestGelfSender implements GelfSender {
 		private GelfMessage lastMessage;
 
-		public GelfSenderResult sendMessage(GelfMessage message) {
+		public void sendMessage(GelfMessage message) {
 			this.lastMessage = message;
-			return GelfSenderResult.OK;
 		}
 
 		public void close() {

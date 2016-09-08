@@ -1,44 +1,38 @@
 package org.graylog2.sender;
 
-import junit.framework.TestCase;
-
-import org.graylog2.message.GelfMessage;
-import org.graylog2.sender.GelfSenderResult;
-import org.graylog2.sender.GelfUDPSender;
-import org.graylog2.sender.GelfUDPSender.UDPBufferBuilder;
-import org.junit.Test;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import org.graylog2.message.GelfMessage;
+import org.graylog2.sender.GelfUDPSender.UDPBufferBuilder;
+import org.junit.Test;
+
+import junit.framework.TestCase;
 
 public class GelfUDPSenderTest extends TestCase {
 	@Test
-	public void testReopenOfChannel() throws IOException {
+	public void testReopenOfChannel() throws IOException, GelfSenderException {
 		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
 		configuration.setGraylogHost("localhost");
 		configuration.setGraylogPort(1234);
-		GelfUDPSender gelfUDPSender = new GelfUDPSender(configuration);
-		assertThat(gelfUDPSender.getChannel().isOpen(), is(true));
+		GelfUDPSender gelfUDPSender = new GelfUDPSender(configuration, false);
 
 		GelfMessage error = new GelfMessage("Test short", "Test long", new Date().getTime(), "ERROR");
 		error.setHost("localhost");
 		error.setVersion("1.3");
 		error.setFacility("F");
 
-		GelfSenderResult result = gelfUDPSender.sendMessage(error);
-
-		assertThat(result, is(GelfSenderResult.OK));
+		gelfUDPSender.sendMessage(error);
 
 		gelfUDPSender.getChannel().close();
 
 		assertThat(gelfUDPSender.getChannel().isOpen(), is(false));
 
-		GelfSenderResult secondMessage = gelfUDPSender.sendMessage(error);
-		assertThat(secondMessage, is(GelfSenderResult.OK));
+		gelfUDPSender.sendMessage(error);
 		assertThat(gelfUDPSender.getChannel().isOpen(), is(true));
 	}
 

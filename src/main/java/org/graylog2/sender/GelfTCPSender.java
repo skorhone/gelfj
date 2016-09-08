@@ -3,7 +3,9 @@ package org.graylog2.sender;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.*;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import org.graylog2.message.GelfMessage;
@@ -26,19 +28,21 @@ public class GelfTCPSender implements GelfSender {
 		this.bufferBuilder = new TCPBufferBuilder();
 	}
 
-	public GelfSenderResult sendMessage(GelfMessage message) {
-		if (shutdown || !message.isValid()) {
-			return GelfSenderResult.MESSAGE_NOT_VALID_OR_SHUTTING_DOWN;
+	public void sendMessage(GelfMessage message) throws GelfSenderException {
+		if (shutdown) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+		}
+		if (!message.isValid()) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
 		}
 		try {
 			if (!isConnected()) {
 				connect();
 			}
 			os.write(bufferBuilder.toTCPBuffer(message.toJson()).array());
-			return GelfSenderResult.OK;
-		} catch (IOException e) {
+		} catch (Exception exception) {
 			closeConnection();
-			return new GelfSenderResult(GelfSenderResult.ERROR_CODE, e);
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, exception);
 		}
 	}
 

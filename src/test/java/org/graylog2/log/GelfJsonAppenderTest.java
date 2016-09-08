@@ -10,7 +10,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.graylog2.message.GelfMessage;
 import org.graylog2.sender.GelfSender;
-import org.graylog2.sender.GelfSenderResult;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,9 +69,8 @@ public class GelfJsonAppenderTest {
         public TestGelfSender() throws IOException {
         }
 
-        public GelfSenderResult sendMessage(GelfMessage message) {
+        public void sendMessage(GelfMessage message) {
             this.lastMessage = message;
-            return GelfSenderResult.OK;
         }
         
         public void close() {
