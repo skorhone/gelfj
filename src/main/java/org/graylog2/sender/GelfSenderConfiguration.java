@@ -2,6 +2,7 @@ package org.graylog2.sender;
 
 public class GelfSenderConfiguration {
 	private String protocol;
+	private String graylogURI;
 	private String graylogHost;
 	private int graylogPort;
 	private String amqpURI;
@@ -22,10 +23,14 @@ public class GelfSenderConfiguration {
 	}
 
 	public String getGraylogURI() {
-		return protocol + ":" + graylogHost + ":" + graylogPort;
+		if (graylogURI == null) {
+			return protocol + ":" + graylogHost + ":" + graylogPort;
+		}
+		return graylogURI;
 	}
 
 	public void setGraylogURI(String graylogURI) {
+		this.graylogURI = graylogURI;
 		if (graylogURI != null) {
 			String[] parts = graylogURI.split(":");
 			if (parts.length == 0 || parts.length > 3) {
@@ -33,13 +38,14 @@ public class GelfSenderConfiguration {
 			}
 			if (parts.length == 1) {
 				setGraylogHost(parts[0]);
-			} else if (parts.length == 2) {
+			} else {
 				setProtocol(parts[0]);
-				setGraylogHost(parts[1]);
-			} else if (parts.length == 3) {
-				setProtocol(parts[0]);
-				setGraylogHost(parts[1]);
-				setGraylogPort(Integer.valueOf(parts[2]));
+				if (!"http".equals(getProtocol()) && !"https".equals(getProtocol())) {
+					setGraylogHost(parts[1]);
+					if (parts.length == 3) {
+						setGraylogPort(Integer.valueOf(parts[2]));
+					}
+				}
 			}
 		}
 	}
@@ -49,7 +55,7 @@ public class GelfSenderConfiguration {
 	}
 
 	public void setProtocol(String protocol) {
-		this.protocol = protocol;
+		this.protocol = protocol != null ? protocol.toLowerCase() : null;
 	}
 
 	public String getGraylogHost() {

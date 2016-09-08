@@ -44,7 +44,9 @@ public class GelfTCPSender implements GelfSender {
 
 	private void connect() throws UnknownHostException, IOException, SocketException {
 		socket = new Socket(host, port);
-		socket.setSendBufferSize(sendBufferSize);
+		if (sendBufferSize > 0) {
+			socket.setSendBufferSize(sendBufferSize);
+		}
 		socket.setKeepAlive(keepalive);
 		os = socket.getOutputStream();
 	}

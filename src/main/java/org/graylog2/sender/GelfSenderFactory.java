@@ -24,12 +24,14 @@ public class GelfSenderFactory {
 			throw new GelfSenderConfigurationException("Graylog2 hostname and amqp uri are both informed!");
 		}
 		try {
-			if ("tcp".equalsIgnoreCase(configuration.getProtocol())) {
+			if ("tcp".equals(configuration.getProtocol())) {
 				gelfSender = new GelfTCPSender(configuration);
-			} else if ("udp".equalsIgnoreCase(configuration.getProtocol())) {
+			} else if ("udp".equals(configuration.getProtocol())) {
 				gelfSender = new GelfUDPSender(configuration);
-			} else if ("amqp".equalsIgnoreCase(configuration.getProtocol())) {
+			} else if ("amqp".equals(configuration.getProtocol())) {
 				gelfSender = new GelfAMQPSender(configuration);
+			} else if ("http".equals(configuration.getProtocol()) || "https".equals(configuration.getProtocol())) {
+				gelfSender = new GelfHTTPSender(configuration);
 			} else {
 				throw new GelfSenderConfigurationException("Unsupported protocol: " + configuration.getProtocol());
 			}
