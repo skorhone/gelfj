@@ -26,7 +26,7 @@ public class GelfHTTPSender implements GelfSender {
 		try {
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setDoOutput(true);
-			connection.setDoInput(true);
+			connection.setDoInput(false);
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Content-Type", "application/json");
 			connection.setRequestProperty("Content-Encoding", "deflate");
