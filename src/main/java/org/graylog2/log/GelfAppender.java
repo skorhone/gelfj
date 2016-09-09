@@ -82,14 +82,6 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		senderConfiguration.setThreaded(threaded);
 	}
 
-	public int getThreadedQueueTimeout() {
-		return senderConfiguration.getThreadedQueueTimeout();
-	}
-
-	public void setThreadedQueueTimeout(int threadedQueueTimeout) {
-		senderConfiguration.setThreadedQueueTimeout(threadedQueueTimeout);
-	}
-
 	public int getThreadedQueueMaxDepth() {
 		return senderConfiguration.getThreadedQueueMaxDepth();
 	}
@@ -122,6 +114,14 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		senderConfiguration.setAmqpRoutingKey(amqpRoutingKey);
 	}
 
+	public int getSendTimeout() {
+		return senderConfiguration.getSendTimeout();
+	}
+
+	public void setSendTimeout(int sendTimeout) {
+		senderConfiguration.setSendTimeout(sendTimeout);
+	}
+	
 	public int getMaxRetries() {
 		return senderConfiguration.getMaxRetries();
 	}

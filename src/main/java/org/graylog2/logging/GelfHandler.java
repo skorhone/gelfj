@@ -102,7 +102,7 @@ public class GelfHandler extends Handler {
 
 	@Override
 	public synchronized void close() {
-		if (null != gelfSender) {
+		if (gelfSender != null) {
 			gelfSender.close();
 			gelfSender = null;
 		}

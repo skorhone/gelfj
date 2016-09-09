@@ -23,7 +23,7 @@ public class GelfThreadedSender implements GelfSender {
 	public GelfThreadedSender(GelfSender sender, GelfSenderConfiguration configuration) {
 		this.status = Status.ACTIVE;
 		this.sender = sender;
-		this.timeout = configuration.getThreadedQueueTimeout();
+		this.timeout = configuration.getSendTimeout();
 		this.maxRetries = configuration.getMaxRetries();
 		this.messageQueue = new ArrayBlockingQueue<GelfMessage>(configuration.getThreadedQueueMaxDepth(), true);
 	}

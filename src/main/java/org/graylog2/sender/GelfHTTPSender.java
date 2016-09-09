@@ -5,6 +5,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.graylog2.message.GelfMessage;
 
@@ -29,9 +30,9 @@ public class GelfHTTPSender implements GelfSender {
 			connection.setDoInput(false);
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setRequestProperty("Content-Encoding", "deflate");
+			connection.setRequestProperty("Content-Encoding", "gzip");
 			connection.connect();
-			DeflaterOutputStream outputStream = new DeflaterOutputStream(connection.getOutputStream());
+			DeflaterOutputStream outputStream = new GZIPOutputStream(connection.getOutputStream());
 			try {
 				outputStream.write(message.toJson().getBytes("utf-8"));
 			} finally {

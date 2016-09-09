@@ -13,17 +13,17 @@ public class GelfSenderConfiguration {
 	private String amqpRoutingKey;
 	private boolean tcpKeepalive;
 	private boolean threaded;
-	private int threadedQueueTimeout;
 	private int threadedQueueMaxDepth;
 	private int socketSendBufferSize;
+	private int sendTimeout;
 	private int maxRetries;
 
 	public GelfSenderConfiguration() {
 		this.protocol = DEFAULT_PROTOCOL;
 		this.graylogPort = DEFAULT_PORT;
 		this.maxRetries = 5;
+		this.sendTimeout = 1000;
 		this.threadedQueueMaxDepth = 1000;
-		this.threadedQueueTimeout = 1000;
 	}
 
 	public String getGraylogURI() {
@@ -129,14 +129,6 @@ public class GelfSenderConfiguration {
 		this.threaded = threaded;
 	}
 
-	public int getThreadedQueueTimeout() {
-		return threadedQueueTimeout;
-	}
-
-	public void setThreadedQueueTimeout(int threadedQueueTimeout) {
-		this.threadedQueueTimeout = threadedQueueTimeout;
-	}
-
 	public int getThreadedQueueMaxDepth() {
 		return threadedQueueMaxDepth;
 	}
@@ -144,7 +136,15 @@ public class GelfSenderConfiguration {
 	public void setThreadedQueueMaxDepth(int threadedQueueMaxDepth) {
 		this.threadedQueueMaxDepth = threadedQueueMaxDepth;
 	}
-
+	
+	public int getSendTimeout() {
+		return sendTimeout;
+	}
+	
+	public void setSendTimeout(int sendTimeout) {
+		this.sendTimeout = sendTimeout;
+	}
+	
 	public int getMaxRetries() {
 		return maxRetries;
 	}

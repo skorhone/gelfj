@@ -26,7 +26,7 @@ public class JULConfigurationManager {
 		if (maxRetries == null) {
 			maxRetries = properties.getProperty("amqpMaxRetries");
 		}
-		String queueTimeout = properties.getProperty("threadedQueueTimeout");
+		String sendTimeout = properties.getProperty("sendTimeout");
 		String queueMaxDepth = properties.getProperty("threadedQueueMaxDepth");
 
 		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
@@ -40,8 +40,8 @@ public class JULConfigurationManager {
 		}
 		configuration.setTcpKeepalive("true".equalsIgnoreCase(properties.getProperty("tcpKeepalive")));
 		configuration.setThreaded("true".equalsIgnoreCase(properties.getProperty("threaded")));
-		if (queueTimeout != null) {
-			configuration.setThreadedQueueTimeout(Integer.valueOf(queueTimeout));
+		if (sendTimeout != null) {
+			configuration.setSendTimeout(Integer.valueOf(sendTimeout));
 		}
 		if (queueMaxDepth != null) {
 			configuration.setThreadedQueueMaxDepth(Integer.valueOf(queueMaxDepth));

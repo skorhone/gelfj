@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.zip.GZIPOutputStream;
 
-public abstract class BufferBuilder {
+public abstract class AbstractBufferManager {
 	protected byte[] gzipMessage(String message) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 

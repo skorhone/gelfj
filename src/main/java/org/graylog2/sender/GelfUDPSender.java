@@ -1,12 +1,14 @@
 package org.graylog2.sender;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.security.SecureRandom;
 import java.util.Random;
 
@@ -15,47 +17,39 @@ import org.graylog2.message.GelfMessage;
 public class GelfUDPSender implements GelfSender {
 	private String destinationHost;
 	private int destinationPort;
+	private int sendTimeout;
 	private int sendBufferSize;
 	private int maxRetries;
-	private UDPBufferBuilder bufferBuilder;
+	private UDPBufferManager bufferManager;
 	private SocketAddress destinationAddress;
-	private DatagramSocket socket;
+	private Selector selector;
+	private DatagramChannel channel;
+	private boolean shutdown;
 
 	public GelfUDPSender(GelfSenderConfiguration configuration, boolean enableRetry) {
 		this.destinationHost = configuration.getGraylogHost();
 		this.destinationPort = configuration.getGraylogPort();
 		this.sendBufferSize = configuration.getSocketSendBufferSize();
+		this.sendTimeout = configuration.getSendTimeout();
 		this.maxRetries = enableRetry ? configuration.getMaxRetries() : 0;
-		this.bufferBuilder = new UDPBufferBuilder();
-	}
-
-	private void initializeSocket() throws IOException {
-		socket = new DatagramSocket();
-		socket.setBroadcast(false);
-		if (sendBufferSize > 0) {
-			socket.setSendBufferSize(sendBufferSize);
-		}
-		destinationAddress = new InetSocketAddress(this.destinationHost, this.destinationPort);
-		socket.connect(destinationAddress);
+		this.bufferManager = new UDPBufferManager();
 	}
 
 	public void sendMessage(GelfMessage message) throws GelfSenderException {
 		if (!message.isValid()) {
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
 		}
-		sendDatagrams(bufferBuilder.toUDPBuffers(message.toJson()));
-	}
 
-	private void sendDatagrams(ByteBuffer[] bytesList) throws GelfSenderException {
 		int tries = 0;
 		Exception lastException = null;
+		ByteBuffer[] datagrams = bufferManager.getUDPBuffers(message.toJson());
 		do {
 			try {
-				if (socket == null) {
-					initializeSocket();
+				if (!isConnected()) {
+					connect();
 				}
-				for (ByteBuffer buffer : bytesList) {
-					socket.send(new DatagramPacket(buffer.array(), buffer.limit(), destinationAddress));
+				for (ByteBuffer datagram : datagrams) {
+					sendDatagram(datagram);
 				}
 				return;
 			} catch (Exception exception) {
@@ -68,77 +62,128 @@ public class GelfUDPSender implements GelfSender {
 		throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
 	}
 
-	public void close() {
-		if (socket != null) {
-			socket.close();
-			socket = null;
+	private void sendDatagram(ByteBuffer buffer) throws IOException, InterruptedException {
+		while (channel.write(buffer) == 0) {
+			if (selector.select(sendTimeout) == 0) {
+				throw new IOException("Send operation timed out");
+			}
 		}
 	}
 
-	public DatagramSocket getSocket() {
-		return socket;
+	private synchronized void connect() throws IOException, GelfSenderException {
+		if (shutdown) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+		}
+		destinationAddress = new InetSocketAddress(this.destinationHost, this.destinationPort);
+		if (selector == null || !selector.isOpen()) {
+			selector = Selector.open();
+		}
+		channel = DatagramChannel.open();
+		if (sendBufferSize > 0) {
+			channel.setOption(StandardSocketOptions.SO_SNDBUF, sendBufferSize);
+		}
+		channel.configureBlocking(false);
+		channel.connect(destinationAddress);
+		channel.register(selector, SelectionKey.OP_WRITE);
 	}
 
-	public void setSocket(DatagramSocket socket) {
-		this.socket = socket;
+	public synchronized void close() {
+		if (!shutdown) {
+			shutdown = true;
+			closeConnection();
+		}
 	}
 
-	public static class UDPBufferBuilder extends BufferBuilder {
+	private void closeConnection() {
+		if (channel != null) {
+			try {
+				channel.close();
+			} catch (Exception ignoredException) {
+			}
+		}
+		if (selector != null) {
+			try {
+				selector.close();
+			} catch (Exception ignoredException) {
+			}
+		}
+		channel = null;
+		selector = null;
+	}
+
+	public boolean isConnected() {
+		return channel != null && channel.isConnected();
+	}
+
+	/**
+	 * Please notice, that for efficiency reasons (single shared buffer
+	 * instance) this class is not thread safe!
+	 */
+	public static class UDPBufferManager extends AbstractBufferManager {
 		private static final byte[] GELF_CHUNKED_ID = new byte[] { 0x1e, 0x0f };
-		private static final int MAXIMUM_CHUNK_SIZE = 1420;
-
+		private static final int HEADER_SIZE = 2 + 8 + 2;
+		private static final int MAXIMUM_CHUNK_SIZE = 1420 - HEADER_SIZE;
+		private ByteBuffer sharedBuffer;
 		private Random random;
 		private byte[] hostId;
 
-		public UDPBufferBuilder() {
+		public UDPBufferManager() {
 			this.random = new Random();
 			this.hostId = createHostId();
+			this.sharedBuffer = ByteBuffer.allocateDirect(128 * 1000);
 		}
 
-		public ByteBuffer[] toUDPBuffers(String message) {
+		public ByteBuffer[] getUDPBuffers(String message) {
 			byte[] messageBytes = gzipMessage(message);
-			// calculate the length of the datagrams array
-			int diagrams_length = messageBytes.length / MAXIMUM_CHUNK_SIZE;
-			// In case of a remainder, due to the integer division, add a extra
-			// datagram
-			if (messageBytes.length % MAXIMUM_CHUNK_SIZE != 0) {
-				diagrams_length++;
-			}
-			ByteBuffer[] datagrams = new ByteBuffer[diagrams_length];
 			if (messageBytes.length > MAXIMUM_CHUNK_SIZE) {
-				sliceDatagrams(messageBytes, datagrams);
-			} else {
-				datagrams[0] = ByteBuffer.allocate(messageBytes.length);
-				datagrams[0].put(messageBytes);
-				datagrams[0].flip();
+				return createMultipleDatagrams(messageBytes);
+			}
+			return createSingleDatagram(messageBytes);
+		}
+
+		private ByteBuffer allocateBuffer(int size) {
+			if (size > sharedBuffer.capacity()) {
+				return ByteBuffer.allocate(size);
+			}
+			return sharedBuffer.duplicate();
+		}
+
+		private ByteBuffer[] createSingleDatagram(byte[] messageBytes) {
+			ByteBuffer[] datagrams = new ByteBuffer[1];
+			datagrams[0] = ByteBuffer.wrap(messageBytes);
+			return datagrams;
+		}
+
+		private ByteBuffer[] createMultipleDatagrams(byte[] messageBytes) {
+			ByteBuffer[] datagrams = new ByteBuffer[countRequiredDatagrams(messageBytes)];
+
+			byte[] messageId = createMessageId();
+
+			ByteBuffer datagramBuffer = allocateBuffer(datagrams.length * HEADER_SIZE + messageBytes.length);
+
+			for (int currentDatagramIdx = 0; currentDatagramIdx < datagrams.length; currentDatagramIdx++) {
+				datagramBuffer.put(GELF_CHUNKED_ID);
+				datagramBuffer.put(messageId);
+				datagramBuffer.put((byte) currentDatagramIdx);
+				datagramBuffer.put((byte) datagrams.length);
+
+				int from = currentDatagramIdx * MAXIMUM_CHUNK_SIZE;
+				int to = from + MAXIMUM_CHUNK_SIZE;
+				if (to > messageBytes.length) {
+					to = messageBytes.length;
+				}
+				datagramBuffer.put(messageBytes, from, to - from);
+
+				ByteBuffer datagram = datagramBuffer;
+				datagramBuffer = datagramBuffer.slice();
+				datagram.flip();
+				datagrams[currentDatagramIdx] = datagram;
 			}
 			return datagrams;
 		}
 
-		private void sliceDatagrams(byte[] messageBytes, ByteBuffer[] datagrams) {
-			int messageLength = messageBytes.length;
-			byte[] messageId = createMessageId();
-
-			// Reuse length of datagrams array since this is supposed to be the
-			// correct number of datagrams
-			int num = datagrams.length;
-			for (int idx = 0; idx < num; idx++) {
-				byte[] header = concatByteArray(GELF_CHUNKED_ID,
-						concatByteArray(messageId, new byte[] { (byte) idx, (byte) num }));
-				int from = idx * MAXIMUM_CHUNK_SIZE;
-				int to = from + MAXIMUM_CHUNK_SIZE;
-				if (to >= messageLength) {
-					to = messageLength;
-				}
-
-				byte[] range = new byte[to - from];
-				System.arraycopy(messageBytes, from, range, 0, range.length);
-
-				byte[] datagram = concatByteArray(header, range);
-				datagrams[idx] = ByteBuffer.allocate(datagram.length);
-				datagrams[idx].put(datagram);
-				datagrams[idx].flip();
-			}
+		private int countRequiredDatagrams(byte[] messageBytes) {
+			return (messageBytes.length + (MAXIMUM_CHUNK_SIZE - 1)) / MAXIMUM_CHUNK_SIZE;
 		}
 
 		private byte[] createMessageId() {
@@ -174,13 +219,6 @@ public class GelfUDPSender implements GelfSender {
 				new SecureRandom().nextBytes(address);
 			}
 			return address;
-		}
-
-		private byte[] concatByteArray(byte[] first, byte[] second) {
-			byte[] result = new byte[first.length + second.length];
-			System.arraycopy(first, 0, result, 0, first.length);
-			System.arraycopy(second, 0, result, first.length, second.length);
-			return result;
 		}
 	}
 }

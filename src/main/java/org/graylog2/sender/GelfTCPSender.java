@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import org.graylog2.message.GelfMessage;
@@ -16,7 +14,7 @@ public class GelfTCPSender implements GelfSender {
 	private int port;
 	private int sendBufferSize;
 	private boolean keepalive;
-	private TCPBufferBuilder bufferBuilder;
+	private TCPBufferManager bufferManager;
 	private Socket socket;
 	private OutputStream os;
 
@@ -25,13 +23,10 @@ public class GelfTCPSender implements GelfSender {
 		this.port = configuration.getGraylogPort();
 		this.sendBufferSize = configuration.getSocketSendBufferSize();
 		this.keepalive = configuration.isTcpKeepalive();
-		this.bufferBuilder = new TCPBufferBuilder();
+		this.bufferManager = new TCPBufferManager();
 	}
 
 	public void sendMessage(GelfMessage message) throws GelfSenderException {
-		if (shutdown) {
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
-		}
 		if (!message.isValid()) {
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
 		}
@@ -39,14 +34,17 @@ public class GelfTCPSender implements GelfSender {
 			if (!isConnected()) {
 				connect();
 			}
-			os.write(bufferBuilder.toTCPBuffer(message.toJson()).array());
+			os.write(bufferManager.toTCPBuffer(message.toJson()).array());
 		} catch (Exception exception) {
 			closeConnection();
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, exception);
 		}
 	}
 
-	private void connect() throws UnknownHostException, IOException, SocketException {
+	private synchronized void connect() throws IOException, GelfSenderException {
+		if (shutdown) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+		}
 		socket = new Socket(host, port);
 		if (sendBufferSize > 0) {
 			socket.setSendBufferSize(sendBufferSize);
@@ -59,27 +57,31 @@ public class GelfTCPSender implements GelfSender {
 		return socket != null && os != null;
 	}
 
+	public synchronized void close() {
+		if (!shutdown) {
+			shutdown = true;
+			closeConnection();
+		}
+	}
+
 	private void closeConnection() {
-		try {
-			os.close();
-		} catch (Exception ignoredException) {
-		} finally {
-			os = null;
+		if (os != null) {
+			try {
+				os.close();
+			} catch (Exception ignoredException) {
+			}
 		}
-		try {
-			socket.close();
-		} catch (Exception ignoredException) {
-		} finally {
-			socket = null;
+		if (socket != null) {
+			try {
+				socket.close();
+			} catch (Exception ignoredException) {
+			}
 		}
+		os = null;
+		socket = null;
 	}
 
-	public void close() {
-		shutdown = true;
-		closeConnection();
-	}
-
-	public static class TCPBufferBuilder extends BufferBuilder {
+	public static class TCPBufferManager extends AbstractBufferManager {
 		public ByteBuffer toTCPBuffer(String message) {
 			byte[] messageBytes;
 			try {
@@ -91,10 +93,7 @@ public class GelfTCPSender implements GelfSender {
 			} catch (UnsupportedEncodingException e) {
 				throw new RuntimeException("No UTF-8 support available.", e);
 			}
-			ByteBuffer buffer = ByteBuffer.allocate(messageBytes.length);
-			buffer.put(messageBytes);
-			buffer.flip();
-			return buffer;
+			return ByteBuffer.wrap(messageBytes);
 		}
 	}
 }
