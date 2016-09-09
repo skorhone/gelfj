@@ -8,7 +8,6 @@ import java.util.zip.GZIPOutputStream;
 public abstract class AbstractBufferManager {
 	protected byte[] gzipMessage(String message) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
 		try {
 			GZIPOutputStream stream = new GZIPOutputStream(bos);
 			byte[] bytes;
@@ -24,7 +23,7 @@ public abstract class AbstractBufferManager {
 			bos.close();
 			return zipped;
 		} catch (IOException e) {
-			return null;
+			throw new RuntimeException(e);
 		}
 	}
 }

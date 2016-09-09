@@ -41,21 +41,21 @@ public class GelfMessage {
 
 	public String toJson() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("{");
-		sb.append("\"version\": ").append(JSON.encodeQuoted(getVersion())).append(", ");
-		sb.append("\"host\": ").append(JSON.encodeQuoted(getHost())).append(", ");
-		sb.append("\"short_message\": ").append(JSON.encodeQuoted(getShortMessage())).append(", ");
-		sb.append("\"full_message\": ").append(JSON.encodeQuoted(getFullMessage())).append(", ");
-		sb.append("\"timestamp\": ").append(getTimestamp()).append(", ");
-		sb.append("\"facility\": ").append(JSON.encodeQuoted(getFacility())).append(", ");
+		sb.append("{\r\n");
+		sb.append("\t\"version\": ").append(JSON.encodeQuoted(getVersion())).append(",\r\n");
+		sb.append("\t\"host\": ").append(JSON.encodeQuoted(getHost())).append(",\r\n");
+		sb.append("\t\"short_message\": ").append(JSON.encodeQuoted(getShortMessage())).append(",\r\n");
+		sb.append("\t\"full_message\": ").append(JSON.encodeQuoted(getFullMessage())).append(",\r\n");
+		sb.append("\t\"timestamp\": ").append(getTimestamp()).append(",\r\n");
+		sb.append("\t\"facility\": ").append(JSON.encodeQuoted(getFacility())).append(",\r\n");
 		if (getFile() != null) {
-			sb.append("\"file\": ").append(JSON.encodeQuoted(getFile())).append(", ");
+			sb.append("\t\"file\": ").append(JSON.encodeQuoted(getFile())).append(",\r\n");
 		}
 		Long line = getLine();
 		if (line != null) {
-			sb.append("\"line\": ").append(line).append(", ");
+			sb.append("\t\"line\": ").append(line).append(",\r\n");
 		}
-		sb.append("\"level\": ").append(getLevel());
+		sb.append("\t\"level\": ").append(getLevel()).append("\r\n");
 
 		for (Map.Entry<String, Object> additionalField : additonalFields.entrySet()) {
 			if (!ID_NAME.equals(additionalField.getKey())) {
@@ -73,10 +73,10 @@ public class GelfMessage {
 				} else {
 					value = "null";
 				}
-				sb.append(", ").append(key).append(": ").append(value);
+				sb.append(",\r\n\t").append(key).append(": ").append(value);
 			}
 		}
-		sb.append("}");
+		sb.append("}\r\n");
 		return sb.toString();
 	}
 

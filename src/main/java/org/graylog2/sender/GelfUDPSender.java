@@ -116,8 +116,8 @@ public class GelfUDPSender implements GelfSender {
 	}
 
 	/**
-	 * Please notice, that for efficiency reasons (single shared buffer
-	 * instance) this class is not thread safe!
+	 * For efficiency reasons (single shared buffer instance) this class is not
+	 * thread safe!
 	 */
 	public static class UDPBufferManager extends AbstractBufferManager {
 		private static final byte[] GELF_CHUNKED_ID = new byte[] { 0x1e, 0x0f };
