@@ -2,12 +2,16 @@ package org.graylog2.log;
 
 import java.util.Map;
 
+import org.graylog2.host.HostConfiguration;
+
 public interface GelfMessageProvider {
-    public boolean isExtractStacktrace();
-    public String getOriginHost();
-    public String getFacility();
-    public Map<String, String> getFields();
-    public boolean isAddExtendedInformation();
-    public boolean isIncludeLocation();
-    public Object transformExtendedField(String field, Object object);
+	public HostConfiguration getHostConfiguration();
+
+	public Map<String, String> getFields();
+	
+	public boolean isExtractStacktrace();
+
+	public boolean isAddExtendedInformation();
+
+	public boolean isIncludeLocation();
 }

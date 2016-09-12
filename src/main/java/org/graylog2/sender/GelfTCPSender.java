@@ -27,9 +27,6 @@ public class GelfTCPSender implements GelfSender {
 	}
 
 	public void sendMessage(GelfMessage message) throws GelfSenderException {
-		if (!message.isValid()) {
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
-		}
 		try {
 			if (!isConnected()) {
 				connect();

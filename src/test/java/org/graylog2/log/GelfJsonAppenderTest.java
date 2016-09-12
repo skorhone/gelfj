@@ -15,70 +15,68 @@ import org.junit.Test;
 
 public class GelfJsonAppenderTest {
 
-    private static final String CLASS_NAME = GelfJsonAppenderTest.class.getCanonicalName();
-    private TestGelfSender gelfSender;
-    private GelfAppender gelfAppender;
+	private static final String CLASS_NAME = GelfJsonAppenderTest.class.getCanonicalName();
+	private TestGelfSender gelfSender;
+	private GelfAppender gelfAppender;
 
-    @Before
-    public void setUp() throws IOException {
-        gelfSender = new TestGelfSender();
+	@Before
+	public void setUp() throws IOException {
+		gelfSender = new TestGelfSender();
 
-        gelfAppender = new GelfJsonAppender() {
+		gelfAppender = new GelfJsonAppender() {
+			@Override
+			public GelfSender getGelfSender() {
+				return gelfSender;
+			}
 
-            @Override
-            public GelfSender getGelfSender() {
-                return gelfSender;
-            }
+			@Override
+			public void append(LoggingEvent event) {
+				super.append(event);
+			}
+		};
+	}
 
-            @Override
-            public void append(LoggingEvent event) {
-                super.append(event);
-            }
+	@Test
+	public void testAppend() throws Exception {
+		String message = "{\"simpleProperty\":\"hello gelf\", \"message\":\"test\"}";
+		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO,
+				message, new RuntimeException("LOL"));
+		gelfAppender.append(event);
 
-            @Override
-            public Object transformExtendedField(String field, Object object) {
-                return super.transformExtendedField(field, object);
-            }
-        };
-    }
+		assertThat("simpleProperty property exists in additional fields",
+				(String) gelfSender.getLastMessage().getAdditionalFields().get("simpleProperty"), is("hello gelf"));
+		assertThat("message property exists in additional fields",
+				(String) gelfSender.getLastMessage().getAdditionalFields().get("message"), is("test"));
+		assertThat("Full message is still JSON", (String) gelfSender.getLastMessage().getFullMessage(), is(message));
+	}
 
-    @Test
-    public void testAppend() throws Exception {
-        String message = "{\"simpleProperty\":\"hello gelf\", \"message\":\"test\"}";
-        LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, message, new RuntimeException("LOL"));
-        gelfAppender.append(event);
+	@Test
+	public void testBrokenJasom() throws Exception {
+		String message = "{\"simpleProperty\":\"hello gelf, \"message\":\"test}";
+		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO,
+				message, new RuntimeException("LOL"));
+		gelfAppender.append(event);
 
-        assertThat("simpleProperty property exists in additional fields", (String) gelfSender.getLastMessage().getAdditonalFields().get("simpleProperty"), is("hello gelf"));
-        assertThat("message property exists in additional fields", (String) gelfSender.getLastMessage().getAdditonalFields().get("message"), is("test"));
-        assertThat("Full message is still JSON", (String) gelfSender.getLastMessage().getFullMessage(), is(message));
-    }
+		assertThat("No additional fields are created", gelfSender.getLastMessage().getAdditionalFields().size(), is(0));
+		assertThat("Full message is the same", (String) gelfSender.getLastMessage().getFullMessage(), is(message));
+	}
 
-    @Test
-    public void testBrokenJasom() throws Exception {
-        String message = "{\"simpleProperty\":\"hello gelf, \"message\":\"test}";
-        LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, message, new RuntimeException("LOL"));
-        gelfAppender.append(event);
+	private class TestGelfSender implements GelfSender {
+		private GelfMessage lastMessage;
 
-        assertThat("No additional fields are created", gelfSender.getLastMessage().getAdditonalFields().size(), is(0));
-        assertThat("Full message is the same", (String) gelfSender.getLastMessage().getFullMessage(), is(message));
-    }
+		public TestGelfSender() throws IOException {
+		}
 
-    private class TestGelfSender implements GelfSender {
-        private GelfMessage lastMessage;
+		public void sendMessage(GelfMessage message) {
+			this.lastMessage = message;
+		}
 
-        public TestGelfSender() throws IOException {
-        }
+		public void close() {
+		}
 
-        public void sendMessage(GelfMessage message) {
-            this.lastMessage = message;
-        }
-        
-        public void close() {
-        }
-
-        public GelfMessage getLastMessage() {
-            return lastMessage;
-        }
-    }
+		public GelfMessage getLastMessage() {
+			return lastMessage;
+		}
+	}
 
 }

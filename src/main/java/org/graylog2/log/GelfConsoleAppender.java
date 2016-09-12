@@ -2,9 +2,11 @@ package org.graylog2.log;
 
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
+import org.apache.log4j.spi.ErrorCode;
 import org.apache.log4j.spi.LoggingEvent;
 import org.graylog2.host.HostConfiguration;
 import org.graylog2.message.GelfMessage;
+import org.graylog2.message.GelfMessageBuilderException;
 import org.json.simple.JSONValue;
 
 import java.util.Collections;
@@ -13,6 +15,7 @@ import java.util.Map;
 
 public class GelfConsoleAppender extends ConsoleAppender implements GelfMessageProvider {
 	private HostConfiguration hostConfiguration;
+	private GelfMessageFactory messageFactory;
 	private boolean extractStacktrace;
 	private boolean addExtendedInformation;
 	private boolean includeLocation = true;
@@ -20,7 +23,8 @@ public class GelfConsoleAppender extends ConsoleAppender implements GelfMessageP
 
 	public GelfConsoleAppender() {
 		super();
-		hostConfiguration = new HostConfiguration();
+		this.hostConfiguration = new HostConfiguration();
+		this.messageFactory = new GelfMessageFactory();
 	}
 
 	public GelfConsoleAppender(Layout layout) {
@@ -61,12 +65,16 @@ public class GelfConsoleAppender extends ConsoleAppender implements GelfMessageP
 		this.includeLocation = includeLocation;
 	}
 
+	public String getOriginHost() {
+		return hostConfiguration.getOriginHost();
+	}
+
 	public String getFacility() {
 		return hostConfiguration.getFacility();
 	}
 
-	public String getOriginHost() {
-		return hostConfiguration.getOriginHost();
+	public HostConfiguration getHostConfiguration() {
+		return hostConfiguration;
 	}
 
 	public Map<String, String> getFields() {
@@ -76,20 +84,17 @@ public class GelfConsoleAppender extends ConsoleAppender implements GelfMessageP
 		return Collections.unmodifiableMap(fields);
 	}
 
-	public Object transformExtendedField(String field, Object object) {
-		if (object != null)
-			return object.toString();
-		return null;
-	}
-
 	@Override
 	protected void subAppend(LoggingEvent event) {
-		GelfMessage gelf = GelfMessageFactory.makeMessage(layout, event, this);
-		this.qw.write(gelf.toJson());
-		this.qw.write(Layout.LINE_SEP);
-
-		if (this.immediateFlush) {
-			this.qw.flush();
+		try {
+			GelfMessage gelf = messageFactory.makeMessage(layout, event, this);
+			this.qw.write(gelf.toJson());
+			this.qw.write(Layout.LINE_SEP);
+			if (this.immediateFlush) {
+				this.qw.flush();
+			}
+		} catch (GelfMessageBuilderException exception) {
+			errorHandler.error("Error building GELF message", exception, ErrorCode.WRITE_FAILURE);
 		}
 	}
 }

@@ -41,7 +41,7 @@ public class GelfHandlerTest {
 	@Test
 	public void handleNullMessage() {
 		Logger myLogger = Logger.getLogger("testNullMessage");
-		
+
 		myLogger.log(Level.FINE, (String) null);
 
 		assertThat("Message short message", gelfSender.getLastMessage().getShortMessage(), notNullValue());
@@ -53,8 +53,8 @@ public class GelfHandlerTest {
 		Logger myLogger = Logger.getLogger("testAdditionalField");
 		myLogger.log(Level.FINE, "test additional field");
 
-		assertEquals("bar", gelfSender.getLastMessage().getAdditonalFields().get("foo"));
-		assertNull(gelfSender.getLastMessage().getAdditonalFields().get("non-existent"));
+		assertEquals("bar", gelfSender.getLastMessage().getAdditionalFields().get("foo"));
+		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("non-existent"));
 	}
 
 	@Test

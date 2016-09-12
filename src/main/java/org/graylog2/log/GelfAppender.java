@@ -10,6 +10,7 @@ import org.apache.log4j.spi.ErrorCode;
 import org.apache.log4j.spi.LoggingEvent;
 import org.graylog2.host.HostConfiguration;
 import org.graylog2.message.GelfMessage;
+import org.graylog2.message.GelfMessageBuilderException;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderConfigurationException;
@@ -26,6 +27,7 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 	private HostConfiguration hostConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
 	private GelfSender gelfSender;
+	private GelfMessageFactory messageFactory;
 	private boolean extractStacktrace;
 	private boolean addExtendedInformation;
 	private boolean includeLocation = true;
@@ -33,8 +35,9 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 
 	public GelfAppender() {
 		super();
-		hostConfiguration = new HostConfiguration();
-		senderConfiguration = new GelfSenderConfiguration();
+		this.hostConfiguration = new HostConfiguration();
+		this.senderConfiguration = new GelfSenderConfiguration();
+		this.messageFactory = new GelfMessageFactory();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -121,7 +124,7 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 	public void setSendTimeout(int sendTimeout) {
 		senderConfiguration.setSendTimeout(sendTimeout);
 	}
-	
+
 	public int getMaxRetries() {
 		return senderConfiguration.getMaxRetries();
 	}
@@ -140,14 +143,6 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		senderConfiguration.setMaxRetries(amqpMaxRetries);
 	}
 
-	public String getFacility() {
-		return hostConfiguration.getFacility();
-	}
-
-	public void setFacility(String facility) {
-		hostConfiguration.setFacility(facility);
-	}
-
 	public boolean isExtractStacktrace() {
 		return extractStacktrace;
 	}
@@ -162,6 +157,18 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 
 	public void setOriginHost(String originHost) {
 		hostConfiguration.setOriginHost(originHost);
+	}
+
+	public HostConfiguration getHostConfiguration() {
+		return hostConfiguration;
+	}
+
+	public String getFacility() {
+		return hostConfiguration.getFacility();
+	}
+
+	public void setFacility(String facility) {
+		hostConfiguration.setFacility(facility);
 	}
 
 	public boolean isAddExtendedInformation() {
@@ -187,12 +194,6 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		return Collections.unmodifiableMap(fields);
 	}
 
-	public Object transformExtendedField(String field, Object object) {
-		if (object != null)
-			return object.toString();
-		return null;
-	}
-
 	@Override
 	public void activateOptions() {
 		try {
@@ -209,12 +210,15 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 
 	@Override
 	protected void append(LoggingEvent event) {
-		GelfMessage gelfMessage = GelfMessageFactory.makeMessage(layout, event, this);
-		if (getGelfSender() == null) {
+		GelfSender sender = getGelfSender();
+		if (sender == null) {
 			errorHandler.error("Could not send GELF message. Gelf Sender is not initialised and equals null");
 		} else {
 			try {
-				getGelfSender().sendMessage(gelfMessage);
+				GelfMessage gelfMessage = messageFactory.makeMessage(layout, event, this);
+				sender.sendMessage(gelfMessage);
+			} catch (GelfMessageBuilderException exception) {
+				errorHandler.error("Error building GELF message", exception, ErrorCode.WRITE_FAILURE);
 			} catch (GelfSenderException exception) {
 				errorHandler.error("Error during sending GELF message. Error code: " + exception.getErrorCode() + ".",
 						exception.getCause(), ErrorCode.WRITE_FAILURE);
@@ -224,6 +228,10 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 
 	public GelfSender getGelfSender() {
 		return gelfSender;
+	}
+	
+	public GelfMessageFactory getMessageFactory() {
+		return messageFactory;
 	}
 
 	public void close() {

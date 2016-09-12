@@ -26,11 +26,9 @@ import org.junit.Test;
  * @author Jochen Schalanda
  */
 public class GelfAppenderTest {
-
 	private static final String CLASS_NAME = GelfAppenderTest.class.getCanonicalName();
 	private TestGelfSender gelfSender;
 	private GelfAppender gelfAppender;
-	private boolean rawExtended = false;
 
 	@Before
 	public void setUp() throws IOException {
@@ -46,15 +44,6 @@ public class GelfAppenderTest {
 			@Override
 			public void append(LoggingEvent event) {
 				super.append(event);
-			}
-
-			@Override
-			public Object transformExtendedField(String field, Object object) {
-				if (rawExtended) {
-					return object;
-				} else {
-					return super.transformExtendedField(field, object);
-				}
 			}
 		};
 	}
@@ -102,8 +91,8 @@ public class GelfAppenderTest {
 
 		gelfAppender.append(event);
 
-		assertEquals("bar", gelfSender.getLastMessage().getAdditonalFields().get("foo"));
-		assertNull(gelfSender.getLastMessage().getAdditonalFields().get("non-existent"));
+		assertEquals("bar", gelfSender.getLastMessage().getAdditionalFields().get("foo"));
+		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("non-existent"));
 	}
 
 	@Test
@@ -117,16 +106,15 @@ public class GelfAppenderTest {
 
 		gelfAppender.append(event);
 
-		assertEquals("200", gelfSender.getLastMessage().getAdditonalFields().get("foo"));
-		assertNull(gelfSender.getLastMessage().getAdditonalFields().get("non-existent"));
+		assertEquals(200, gelfSender.getLastMessage().getAdditionalFields().get("foo"));
+		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("non-existent"));
 
-		rawExtended = true;
 		event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, "",
 				new RuntimeException("LOL"));
 		gelfAppender.append(event);
 
-		assertEquals(new Integer(200), gelfSender.getLastMessage().getAdditonalFields().get("foo"));
-		assertNull(gelfSender.getLastMessage().getAdditonalFields().get("non-existent"));
+		assertEquals(new Integer(200), gelfSender.getLastMessage().getAdditionalFields().get("foo"));
+		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("non-existent"));
 	}
 
 	@Test
@@ -139,7 +127,7 @@ public class GelfAppenderTest {
 
 		gelfAppender.append(event);
 
-		assertEquals("Foobar", gelfSender.getLastMessage().getAdditonalFields().get("loggerNdc"));
+		assertEquals("Foobar", gelfSender.getLastMessage().getAdditionalFields().get("loggerNdc"));
 	}
 
 	@Test
@@ -155,8 +143,8 @@ public class GelfAppenderTest {
 
 		gelfAppender.append(event);
 
-		assertNull(gelfSender.getLastMessage().getAdditonalFields().get("loggerNdc"));
-		assertNull(gelfSender.getLastMessage().getAdditonalFields().get("foo"));
+		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("loggerNdc"));
+		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("foo"));
 	}
 
 	@Test
@@ -169,7 +157,7 @@ public class GelfAppenderTest {
 
 		gelfAppender.append(event);
 
-		assertEquals(gelfSender.getLastMessage().getAdditonalFields().get("logger"), CLASS_NAME);
+		assertEquals(gelfSender.getLastMessage().getAdditionalFields().get("logger"), CLASS_NAME);
 	}
 
 	private class TestGelfSender implements GelfSender {

@@ -2,7 +2,6 @@ package org.graylog2.logging;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.ErrorManager;
 import java.util.logging.Filter;
 import java.util.logging.Handler;
@@ -12,6 +11,8 @@ import java.util.logging.LogRecord;
 
 import org.graylog2.host.HostConfiguration;
 import org.graylog2.message.GelfMessage;
+import org.graylog2.message.GelfMessageBuilder;
+import org.graylog2.message.GelfMessageBuilderException;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderConfigurationException;
@@ -19,7 +20,6 @@ import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
 
 public class GelfHandler extends Handler {
-	private static final int MAX_SHORT_MESSAGE_LENGTH = 250;
 	private HostConfiguration hostConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
 	private Map<String, String> fields;
@@ -94,6 +94,8 @@ public class GelfHandler extends Handler {
 						exception.getCause(), ErrorManager.WRITE_FAILURE);
 			} catch (GelfSenderConfigurationException exception) {
 				reportError(exception.getMessage(), exception.getCauseException(), ErrorManager.WRITE_FAILURE);
+			} catch (GelfMessageBuilderException exception) {
+				reportError("Could not create GELF message", exception, ErrorManager.WRITE_FAILURE);
 			} catch (Exception exception) {
 				reportError("Could not send GELF message", exception, ErrorManager.WRITE_FAILURE);
 			}
@@ -109,39 +111,26 @@ public class GelfHandler extends Handler {
 		closed = true;
 	}
 
-	private GelfMessage makeMessage(LogRecord record) {
+	private GelfMessage makeMessage(LogRecord record) throws GelfMessageBuilderException {
 		String message = getFormatter().format(record);
-		final String shortMessage = formatShortMessage(message);
-		final GelfMessage gelfMessage = new GelfMessage(shortMessage, message, record.getMillis(),
-				String.valueOf(levelToSyslogLevel(record.getLevel())));
-		gelfMessage.addField("SourceClassName", record.getSourceClassName());
-		gelfMessage.addField("SourceMethodName", record.getSourceMethodName());
-		if (null != hostConfiguration.getOriginHost()) {
-			gelfMessage.setHost(hostConfiguration.getOriginHost());
-		}
-		if (null != hostConfiguration.getFacility()) {
-			gelfMessage.setFacility(hostConfiguration.getFacility());
-		}
+
+		GelfMessageBuilder builder = new GelfMessageBuilder(hostConfiguration);
+
+		builder.setFullMessage(message);
+		builder.setLevel(String.valueOf(levelToSyslogLevel(record.getLevel())));
+		builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, record.getThreadID());
+		builder.addField(GelfMessageBuilder.LOGGER_LEVEL_FIELD, record.getLevel());
+		builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, record.getLoggerName());
+		builder.addField(GelfMessageBuilder.SOURCE_CLASS_FIELD, record.getSourceClassName());
+		builder.addField(GelfMessageBuilder.SOURCE_METHOD_FIELD, record.getSourceMethodName());
+
 		if (record instanceof GelfLogRecord) {
 			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
-			for (Entry<String, Object> entry : gelfLogRecord.getFields().entrySet()) {
-				gelfMessage.addField(entry.getKey(), entry.getValue());
-			}
+			builder.addFields(gelfLogRecord.getFields());
 		}
-		for (Entry<String, String> entry : fields.entrySet()) {
-			gelfMessage.addField(entry.getKey(), entry.getValue());
-		}
-		return gelfMessage;
-	}
+		builder.addFields(fields);
 
-	private String formatShortMessage(String message) {
-		final String shortMessage;
-		if (message.length() > MAX_SHORT_MESSAGE_LENGTH) {
-			shortMessage = message.substring(0, MAX_SHORT_MESSAGE_LENGTH - 1);
-		} else {
-			shortMessage = message;
-		}
-		return shortMessage;
+		return builder.build();
 	}
 
 	private int levelToSyslogLevel(Level level) {

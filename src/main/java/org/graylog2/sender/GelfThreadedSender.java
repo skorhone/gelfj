@@ -32,9 +32,6 @@ public class GelfThreadedSender implements GelfSender {
 		if (isClosed()) {
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
 		}
-		if (!message.isValid()) {
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
-		}
 		if (!isInitialized()) {
 			initialize();
 		}

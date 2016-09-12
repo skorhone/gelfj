@@ -1,6 +1,7 @@
 package org.graylog2.message;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,26 +18,13 @@ public class GelfMessage {
 	private String fullMessage;
 	private long javaTimestamp;
 	private String level;
-	private String facility = "gelf-java";
+	private String facility;
 	private String line;
 	private String file;
-	private Map<String, Object> additonalFields = new HashMap<String, Object>();
+	private Map<String, Object> additionalFields;
 
 	public GelfMessage() {
-	}
-
-	public GelfMessage(String shortMessage, String fullMessage, long timestamp, String level) {
-		this(shortMessage, fullMessage, timestamp, level, null, null);
-	}
-
-	public GelfMessage(String shortMessage, String fullMessage, long timestamp, String level, String line,
-			String file) {
-		this.shortMessage = shortMessage != null ? shortMessage : "null";
-		this.fullMessage = fullMessage;
-		this.javaTimestamp = timestamp;
-		this.level = level;
-		this.line = line;
-		this.file = file;
+		this.version = GELF_VERSION;
 	}
 
 	public String toJson() {
@@ -57,7 +45,7 @@ public class GelfMessage {
 		}
 		sb.append("\t\"level\": ").append(getLevel()).append("\r\n");
 
-		for (Map.Entry<String, Object> additionalField : additonalFields.entrySet()) {
+		for (Map.Entry<String, Object> additionalField : getAdditionalFields().entrySet()) {
 			if (!ID_NAME.equals(additionalField.getKey())) {
 				String key = JSON.encodeQuoted("_" + additionalField.getKey());
 				Object objectValue = additionalField.getValue();
@@ -174,33 +162,17 @@ public class GelfMessage {
 		this.file = file;
 	}
 
-	public GelfMessage addField(String key, String value) {
-		getAdditonalFields().put(key, value);
-		return this;
+	public void addField(String key, Object value) {
+		if (additionalFields == null) {
+			additionalFields = new HashMap<String, Object>();
+		}
+		additionalFields.put(key, value);
 	}
 
-	public GelfMessage addField(String key, Object value) {
-		getAdditonalFields().put(key, value);
-		return this;
-	}
-
-	public Map<String, Object> getAdditonalFields() {
-		return additonalFields;
-	}
-
-	public void setAdditonalFields(Map<String, Object> additonalFields) {
-		this.additonalFields = new HashMap<String, Object>(additonalFields);
-	}
-
-	public boolean isValid() {
-		return isShortOrFullMessagesExists() && !isEmpty(version) && !isEmpty(host) && !isEmpty(facility);
-	}
-
-	private boolean isShortOrFullMessagesExists() {
-		return shortMessage != null || fullMessage != null;
-	}
-
-	public boolean isEmpty(String str) {
-		return str == null || "".equals(str.trim());
+	public Map<String, Object> getAdditionalFields() {
+		if (additionalFields == null) {
+			return Collections.emptyMap();
+		}
+		return additionalFields;
 	}
 }

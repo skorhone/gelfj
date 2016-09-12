@@ -2,7 +2,10 @@ package org.graylog2.json;
 
 public class JSON {
 	public static String encodeQuoted(String string) {
-		if (string == null || string.length() == 0) {
+		if (string == null) {
+			return "null";
+		}
+		if (string.length() == 0) {
 			return "\"\"";
 		}
 		StringBuilder sb = new StringBuilder(string.length() + 4);

@@ -36,9 +36,6 @@ public class GelfAMQPSender implements GelfSender {
 	}
 
 	public void sendMessage(GelfMessage message) throws GelfSenderException {
-		if (!message.isValid()) {
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
-		}
 		String uuid = UUID.randomUUID().toString();
 		String messageid = "gelf" + message.getHost() + message.getFacility() + message.getTimestamp() + uuid;
 

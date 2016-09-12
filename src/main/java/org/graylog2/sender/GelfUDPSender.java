@@ -36,10 +36,6 @@ public class GelfUDPSender implements GelfSender {
 	}
 
 	public void sendMessage(GelfMessage message) throws GelfSenderException {
-		if (!message.isValid()) {
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
-		}
-
 		int tries = 0;
 		Exception lastException = null;
 		ByteBuffer[] datagrams = bufferManager.getUDPBuffers(message.toJson());

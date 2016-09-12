@@ -21,9 +21,6 @@ public class GelfHTTPSender implements GelfSender {
 		if (shutdown) {
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
 		}
-		if (!message.isValid()) {
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_MESSAGE_NOT_VALID);
-		}
 		try {
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setDoOutput(true);
