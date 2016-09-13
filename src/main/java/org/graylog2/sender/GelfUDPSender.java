@@ -51,7 +51,7 @@ public class GelfUDPSender implements GelfSender {
 			} catch (Exception exception) {
 				tries++;
 				lastException = exception;
-				close();
+				closeConnection();
 			}
 		} while (tries <= maxRetries);
 
