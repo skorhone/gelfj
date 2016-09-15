@@ -22,7 +22,7 @@ public class GelfThreadedSenderTest {
 	public void setup() {
 		mockSender = new MockGelfSender();
 		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
-		configuration.setSendTimeout(100);
+		configuration.setThreadedQueueTimeout(100);
 		configuration.setThreadedQueueMaxDepth(2);
 		sender = new GelfThreadedSender(mockSender, configuration);
 	}
