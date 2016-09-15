@@ -14,6 +14,7 @@ public class GelfSenderConfiguration {
 	private boolean tcpKeepalive;
 	private boolean threaded;
 	private int threadedQueueMaxDepth;
+	private int threadedQueueTimeout;
 	private int socketSendBufferSize;
 	private int sendTimeout;
 	private int maxRetries;
@@ -23,6 +24,7 @@ public class GelfSenderConfiguration {
 		this.graylogPort = DEFAULT_PORT;
 		this.maxRetries = 5;
 		this.sendTimeout = 1000;
+		this.threadedQueueTimeout = 1000;
 		this.threadedQueueMaxDepth = 1000;
 	}
 
@@ -135,6 +137,14 @@ public class GelfSenderConfiguration {
 
 	public void setThreadedQueueMaxDepth(int threadedQueueMaxDepth) {
 		this.threadedQueueMaxDepth = threadedQueueMaxDepth;
+	}
+	
+	public int getThreadedQueueTimeout() {
+		return threadedQueueTimeout;
+	}
+	
+	public void setThreadedQueueTimeout(int threadedQueueTimeout) {
+		this.threadedQueueTimeout = threadedQueueTimeout;
 	}
 	
 	public int getSendTimeout() {

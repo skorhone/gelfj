@@ -93,6 +93,14 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		senderConfiguration.setThreadedQueueMaxDepth(threadedQueueMaxDepth);
 	}
 
+	public int getThreadedQueueTimeout() {
+		return senderConfiguration.getThreadedQueueTimeout();
+	}
+
+	public void setThreadedQueueTimeout(int threadedQueueTimeout) {
+		senderConfiguration.setThreadedQueueTimeout(threadedQueueTimeout);
+	}
+
 	public String getAmqpURI() {
 		return senderConfiguration.getAmqpURI();
 	}
@@ -229,7 +237,7 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 	public GelfSender getGelfSender() {
 		return gelfSender;
 	}
-	
+
 	public GelfMessageFactory getMessageFactory() {
 		return messageFactory;
 	}

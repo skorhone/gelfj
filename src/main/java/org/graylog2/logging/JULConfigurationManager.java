@@ -28,6 +28,7 @@ public class JULConfigurationManager {
 		}
 		String sendTimeout = properties.getProperty("sendTimeout");
 		String queueMaxDepth = properties.getProperty("threadedQueueMaxDepth");
+		String queueTimeout = properties.getProperty("threadedQueueTimeout");
 
 		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
 		configuration.setGraylogURI(properties.getProperty("graylogHost"));
@@ -45,6 +46,9 @@ public class JULConfigurationManager {
 		}
 		if (queueMaxDepth != null) {
 			configuration.setThreadedQueueMaxDepth(Integer.valueOf(queueMaxDepth));
+		}
+		if (queueTimeout != null) {
+			configuration.setThreadedQueueTimeout(Integer.valueOf(queueTimeout));
 		}
 		configuration.setAmqpExchangeName(properties.getProperty("amqpExchangeName"));
 		configuration.setAmqpRoutingKey(properties.getProperty("amqpRoutingKey"));
