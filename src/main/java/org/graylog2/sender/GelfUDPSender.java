@@ -130,7 +130,7 @@ public class GelfUDPSender implements GelfSender {
 		}
 
 		public ByteBuffer[] getUDPBuffers(String message) {
-			byte[] messageBytes = gzipMessage(message);
+			byte[] messageBytes = getMessageAsBytes(message);
 			if (messageBytes.length > MAXIMUM_CHUNK_SIZE) {
 				return createMultipleDatagrams(messageBytes);
 			}

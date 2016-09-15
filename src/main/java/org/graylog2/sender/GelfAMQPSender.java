@@ -101,7 +101,7 @@ public class GelfAMQPSender implements GelfSender {
 
 	public static class AMQPBufferManager extends AbstractBufferManager {
 		public byte[] toAMQPBuffer(String message) {
-			return gzipMessage(message);
+			return getMessageAsBytes(message);
 		}
 	}
 }
