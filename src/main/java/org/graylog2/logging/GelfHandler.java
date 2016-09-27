@@ -118,7 +118,7 @@ public class GelfHandler extends Handler {
 
 		builder.setFullMessage(message);
 		builder.setLevel(String.valueOf(levelToSyslogLevel(record.getLevel())));
-		builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, record.getThreadID());
+		builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, Thread.currentThread().getName());
 		builder.addField(GelfMessageBuilder.LOGGER_LEVEL_FIELD, record.getLevel());
 		builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, record.getLoggerName());
 		builder.addField(GelfMessageBuilder.SOURCE_CLASS_FIELD, record.getSourceClassName());
