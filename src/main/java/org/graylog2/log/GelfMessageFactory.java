@@ -40,8 +40,8 @@ public class GelfMessageFactory {
 			LocationInfo locationInformation = event.getLocationInformation();
 			builder.setFile(locationInformation.getFileName());
 			builder.setLine(locationInformation.getLineNumber());
-			builder.addField(GelfMessageBuilder.SOURCE_CLASS_FIELD, locationInformation.getClassName());
-			builder.addField(GelfMessageBuilder.SOURCE_METHOD_FIELD, locationInformation.getMethodName());
+			builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, locationInformation.getClassName());
+			builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, locationInformation.getMethodName());
 		}
 
 		String fullMessage = formatMessage(layout, event, provider);
@@ -51,7 +51,7 @@ public class GelfMessageFactory {
 
 		if (provider.isAddExtendedInformation()) {
 			builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, event.getThreadName());
-			builder.addField(GelfMessageBuilder.LOGGER_NATIVE_LEVEL_FIELD, level.toString());
+			builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, level.toString());
 			builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, event.getLoggerName());
 			builder.addField(JAVA_TIMESTAMP, timeStamp);
 			builder.addFields(event.getProperties());

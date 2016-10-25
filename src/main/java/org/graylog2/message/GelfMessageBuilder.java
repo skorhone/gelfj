@@ -4,11 +4,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class GelfMessageBuilder {
-    public static final String LOGGER_NAME_FIELD = "logger";
-    public static final String THREAD_NAME_FIELD = "thread";
-	public static final String LOGGER_NATIVE_LEVEL_FIELD = "nativeLevel";
-	public static final String SOURCE_CLASS_FIELD = "SourceClassName";
-	public static final String SOURCE_METHOD_FIELD = "SourceMethodName";
+    public static final String LOGGER_NAME_FIELD = "loggerName";
+    public static final String THREAD_NAME_FIELD = "threadName";
+	public static final String NATIVE_LEVEL_FIELD = "nativeLevel";
+	public static final String CLASS_NAME_FIELD = "className";
+	public static final String METHOD_NAME_FIELD = "methodName";
 	
 	private GelfMessage gelfMessage;
 

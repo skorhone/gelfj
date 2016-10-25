@@ -102,10 +102,10 @@ public class GelfHandler extends Handler {
 		builder.setFullMessage(message);
 		builder.setLevel(String.valueOf(levelToSyslogLevel(record.getLevel())));
 		builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, Thread.currentThread().getName());
-		builder.addField(GelfMessageBuilder.LOGGER_NATIVE_LEVEL_FIELD, record.getLevel());
+		builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, record.getLevel());
 		builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, record.getLoggerName());
-		builder.addField(GelfMessageBuilder.SOURCE_CLASS_FIELD, record.getSourceClassName());
-		builder.addField(GelfMessageBuilder.SOURCE_METHOD_FIELD, record.getSourceMethodName());
+		builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, record.getSourceClassName());
+		builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, record.getSourceMethodName());
 
 		if (record instanceof GelfLogRecord) {
 			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
