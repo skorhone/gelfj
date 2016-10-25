@@ -1,7 +1,5 @@
 package org.graylog2.logging;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.ErrorManager;
 import java.util.logging.Filter;
 import java.util.logging.Handler;
@@ -22,7 +20,6 @@ import org.graylog2.sender.GelfSenderFactory;
 public class GelfHandler extends Handler {
 	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
-	private Map<String, String> fields;
 	private GelfSender gelfSender;
 	private boolean closed;
 
@@ -37,20 +34,6 @@ public class GelfHandler extends Handler {
 	private void configure(JULProperties properties) {
 		this.gelfMessageBuilderConfiguration = JULConfigurationManager.getGelfMessageBuilderConfiguration(properties);
 		this.senderConfiguration = JULConfigurationManager.getGelfSenderConfiguration(properties);
-
-		int fieldNumber = 0;
-		fields = new HashMap<String, String>();
-		while (true) {
-			final String property = properties.getProperty("additionalField." + fieldNumber);
-			if (null == property) {
-				break;
-			}
-			final int index = property.indexOf('=');
-			if (-1 != index) {
-				fields.put(property.substring(0, index), property.substring(index + 1));
-			}
-			fieldNumber++;
-		}
 
 		final String level = properties.getProperty("level");
 		if (null != level) {
@@ -148,22 +131,5 @@ public class GelfHandler extends Handler {
 
 	public synchronized void setGelfSender(GelfSender gelfSender) {
 		this.gelfSender = gelfSender;
-	}
-
-	public void setAdditionalField(String entry) {
-		if (entry == null)
-			return;
-		final int index = entry.indexOf('=');
-		if (-1 != index) {
-			String key = entry.substring(0, index);
-			String val = entry.substring(index + 1);
-			if (key.equals(""))
-				return;
-			fields.put(key, val);
-		}
-	}
-
-	public Map<String, String> getFields() {
-		return fields;
 	}
 }

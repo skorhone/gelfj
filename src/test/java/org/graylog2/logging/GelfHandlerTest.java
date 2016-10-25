@@ -8,14 +8,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -67,15 +65,4 @@ public class GelfHandlerTest {
 				Pattern.MULTILINE | Pattern.DOTALL);
 		assertTrue(regex.matcher(gelfSender.getLastMessage().getFullMessage()).matches());
 	}
-
-	@Test
-	public void testSetAdditionalField() {
-		GelfHandler gelfHandler = new GelfHandler();
-		gelfHandler.setAdditionalField(null);
-		gelfHandler.setAdditionalField("=");
-		gelfHandler.setAdditionalField("==");
-		Map<String, String> fields = gelfHandler.getFields();
-		assertThat("No empty key exists", fields.get(""), CoreMatchers.nullValue());
-	}
-
 }
