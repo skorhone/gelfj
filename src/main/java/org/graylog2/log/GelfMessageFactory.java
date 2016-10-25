@@ -34,7 +34,7 @@ public class GelfMessageFactory {
 		long timeStamp = getTimeStamp(event);
 		Level level = event.getLevel();
 
-		GelfMessageBuilder builder = new GelfMessageBuilder(provider.getHostConfiguration());
+		GelfMessageBuilder builder = new GelfMessageBuilder(provider.getGelfMessageBuilderConfiguration());
 
 		if (provider.isIncludeLocation() && event.locationInformationExists()) {
 			LocationInfo locationInformation = event.getLocationInformation();
@@ -48,7 +48,6 @@ public class GelfMessageFactory {
 		builder.setLevel(String.valueOf(level.getSyslogEquivalent()));
 		builder.setJavaTimestamp(timeStamp);
 		builder.setFullMessage(fullMessage);
-		builder.addFields(provider.getFields());
 
 		if (provider.isAddExtendedInformation()) {
 			builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, event.getThreadName());

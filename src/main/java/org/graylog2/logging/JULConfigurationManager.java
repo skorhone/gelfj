@@ -1,21 +1,23 @@
 package org.graylog2.logging;
 
-import org.graylog2.host.HostConfiguration;
+import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.sender.GelfSenderConfiguration;
 
 public class JULConfigurationManager {
 	private JULConfigurationManager() {
 	}
 
-	public static HostConfiguration getHostConfiguration(JULProperties properties) {
+	public static GelfMessageBuilderConfiguration getGelfMessageBuilderConfiguration(JULProperties properties) {
 		String originHost = properties.getProperty("originHost");
 		String facility = properties.getProperty("facility");
 
-		HostConfiguration configuration = new HostConfiguration();
+		GelfMessageBuilderConfiguration configuration = new GelfMessageBuilderConfiguration();
 		if (originHost != null) {
 			configuration.setOriginHost(originHost);
 		}
 		configuration.setFacility(facility);
+		configuration.setAdditionalFields(properties.getProperties("additionalField"));
+
 		return configuration;
 	}
 

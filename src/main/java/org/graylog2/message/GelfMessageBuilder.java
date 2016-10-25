@@ -3,8 +3,6 @@ package org.graylog2.message;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.graylog2.host.HostConfiguration;
-
 public class GelfMessageBuilder {
     public static final String LOGGER_NAME_FIELD = "logger";
     public static final String THREAD_NAME_FIELD = "thread";
@@ -14,10 +12,11 @@ public class GelfMessageBuilder {
 	
 	private GelfMessage gelfMessage;
 
-	public GelfMessageBuilder(HostConfiguration hostConfiguration) {
+	public GelfMessageBuilder(GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration) {
 		this.gelfMessage = new GelfMessage();
-		gelfMessage.setHost(hostConfiguration.getOriginHost());
-		gelfMessage.setFacility(hostConfiguration.getFacility());
+		gelfMessage.setHost(gelfMessageBuilderConfiguration.getOriginHost());
+		gelfMessage.setFacility(gelfMessageBuilderConfiguration.getFacility());
+		addFields(gelfMessageBuilderConfiguration.getAdditionalFields());
 	}
 
 	public GelfMessageBuilder setFullMessage(String fullMessage) {

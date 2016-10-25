@@ -9,9 +9,9 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
-import org.graylog2.host.HostConfiguration;
 import org.graylog2.message.GelfMessage;
 import org.graylog2.message.GelfMessageBuilder;
+import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.message.GelfMessageBuilderException;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
@@ -20,14 +20,14 @@ import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
 
 public class GelfHandler extends Handler {
-	private HostConfiguration hostConfiguration;
+	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
 	private Map<String, String> fields;
 	private GelfSender gelfSender;
 	private boolean closed;
 
 	public GelfHandler() {
-		configure(new JULProperties(LogManager.getLogManager(), getClass().getName()));
+		configure(new JULProperties(LogManager.getLogManager(), System.getProperties(), getClass().getName()));
 	}
 
 	public GelfHandler(JULProperties properties) {
@@ -35,7 +35,7 @@ public class GelfHandler extends Handler {
 	}
 
 	private void configure(JULProperties properties) {
-		this.hostConfiguration = JULConfigurationManager.getHostConfiguration(properties);
+		this.gelfMessageBuilderConfiguration = JULConfigurationManager.getGelfMessageBuilderConfiguration(properties);
 		this.senderConfiguration = JULConfigurationManager.getGelfSenderConfiguration(properties);
 
 		int fieldNumber = 0;
@@ -114,7 +114,7 @@ public class GelfHandler extends Handler {
 	private GelfMessage makeMessage(LogRecord record) throws GelfMessageBuilderException {
 		String message = getFormatter().format(record);
 
-		GelfMessageBuilder builder = new GelfMessageBuilder(hostConfiguration);
+		GelfMessageBuilder builder = new GelfMessageBuilder(gelfMessageBuilderConfiguration);
 
 		builder.setFullMessage(message);
 		builder.setLevel(String.valueOf(levelToSyslogLevel(record.getLevel())));
@@ -128,7 +128,7 @@ public class GelfHandler extends Handler {
 			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
 			builder.addFields(gelfLogRecord.getFields());
 		}
-		builder.addFields(fields);
+		// builder.addFields(fields);
 
 		return builder.build();
 	}

@@ -8,8 +8,8 @@ import java.util.logging.ErrorManager;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.ErrorCode;
 import org.apache.log4j.spi.LoggingEvent;
-import org.graylog2.host.HostConfiguration;
 import org.graylog2.message.GelfMessage;
+import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.message.GelfMessageBuilderException;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
@@ -24,7 +24,7 @@ import org.json.simple.JSONValue;
  * @author Jochen Schalanda
  */
 public class GelfAppender extends AppenderSkeleton implements GelfMessageProvider {
-	private HostConfiguration hostConfiguration;
+	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
 	private GelfSender gelfSender;
 	private GelfMessageFactory messageFactory;
@@ -35,7 +35,7 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 
 	public GelfAppender() {
 		super();
-		this.hostConfiguration = new HostConfiguration();
+		this.gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
 		this.senderConfiguration = new GelfSenderConfiguration();
 		this.messageFactory = new GelfMessageFactory();
 	}
@@ -160,23 +160,23 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 	}
 
 	public String getOriginHost() {
-		return hostConfiguration.getOriginHost();
+		return gelfMessageBuilderConfiguration.getOriginHost();
 	}
 
 	public void setOriginHost(String originHost) {
-		hostConfiguration.setOriginHost(originHost);
+		gelfMessageBuilderConfiguration.setOriginHost(originHost);
 	}
 
-	public HostConfiguration getHostConfiguration() {
-		return hostConfiguration;
+	public GelfMessageBuilderConfiguration getGelfMessageBuilderConfiguration() {
+		return gelfMessageBuilderConfiguration;
 	}
 
 	public String getFacility() {
-		return hostConfiguration.getFacility();
+		return gelfMessageBuilderConfiguration.getFacility();
 	}
 
 	public void setFacility(String facility) {
-		hostConfiguration.setFacility(facility);
+		gelfMessageBuilderConfiguration.setFacility(facility);
 	}
 
 	public boolean isAddExtendedInformation() {

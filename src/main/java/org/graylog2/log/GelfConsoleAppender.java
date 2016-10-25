@@ -4,41 +4,31 @@ import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.spi.ErrorCode;
 import org.apache.log4j.spi.LoggingEvent;
-import org.graylog2.host.HostConfiguration;
 import org.graylog2.message.GelfMessage;
+import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.message.GelfMessageBuilderException;
-import org.json.simple.JSONValue;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public class GelfConsoleAppender extends ConsoleAppender implements GelfMessageProvider {
-	private HostConfiguration hostConfiguration;
+	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfMessageFactory messageFactory;
 	private boolean extractStacktrace;
 	private boolean addExtendedInformation;
 	private boolean includeLocation = true;
-	private Map<String, String> fields;
 
 	public GelfConsoleAppender() {
 		super();
-		this.hostConfiguration = new HostConfiguration();
+		this.gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
 		this.messageFactory = new GelfMessageFactory();
 	}
 
 	public GelfConsoleAppender(Layout layout) {
 		super(layout);
-		hostConfiguration = new HostConfiguration();
+		gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
 	}
 
 	public GelfConsoleAppender(Layout layout, String target) {
 		super(layout, target);
-		hostConfiguration = new HostConfiguration();
-	}
-
-	public void setAdditionalFields(String additionalFields) {
-		fields = (Map<String, String>) JSONValue.parse(additionalFields.replaceAll("'", "\""));
+		gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
 	}
 
 	public boolean isExtractStacktrace() {
@@ -66,22 +56,15 @@ public class GelfConsoleAppender extends ConsoleAppender implements GelfMessageP
 	}
 
 	public String getOriginHost() {
-		return hostConfiguration.getOriginHost();
+		return gelfMessageBuilderConfiguration.getOriginHost();
 	}
 
 	public String getFacility() {
-		return hostConfiguration.getFacility();
+		return gelfMessageBuilderConfiguration.getFacility();
 	}
 
-	public HostConfiguration getHostConfiguration() {
-		return hostConfiguration;
-	}
-
-	public Map<String, String> getFields() {
-		if (fields == null) {
-			fields = new HashMap<String, String>();
-		}
-		return Collections.unmodifiableMap(fields);
+	public GelfMessageBuilderConfiguration getGelfMessageBuilderConfiguration() {
+		return gelfMessageBuilderConfiguration;
 	}
 
 	@Override

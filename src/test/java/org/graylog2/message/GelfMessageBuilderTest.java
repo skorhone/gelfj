@@ -3,13 +3,12 @@ package org.graylog2.message;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.graylog2.host.HostConfiguration;
 import org.junit.Test;
 
 public class GelfMessageBuilderTest {
 	@Test
 	public void testInvalidHost() throws Exception {
-		HostConfiguration configuration = new HostConfiguration();
+		GelfMessageBuilderConfiguration configuration = new GelfMessageBuilderConfiguration();
 		configuration.setOriginHost("");
 
 		GelfMessageBuilder builder = new GelfMessageBuilder(configuration);
@@ -25,7 +24,7 @@ public class GelfMessageBuilderTest {
 
 	@Test
 	public void testNullMessageContent() throws Exception {
-		HostConfiguration configuration = new HostConfiguration();
+		GelfMessageBuilderConfiguration configuration = new GelfMessageBuilderConfiguration();
 		configuration.setOriginHost("localhost");
 
 		GelfMessageBuilder builder = new GelfMessageBuilder(configuration);
@@ -41,7 +40,7 @@ public class GelfMessageBuilderTest {
 
 	@Test
 	public void testNullVersion() throws Exception {
-		HostConfiguration configuration = new HostConfiguration();
+		GelfMessageBuilderConfiguration configuration = new GelfMessageBuilderConfiguration();
 		configuration.setOriginHost("localhost");
 
 		GelfMessageBuilder builder = new GelfMessageBuilder(configuration);
