@@ -51,7 +51,7 @@ public class GelfMessageFactory {
 
 		if (provider.isAddExtendedInformation()) {
 			builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, event.getThreadName());
-			builder.addField(GelfMessageBuilder.LOGGER_LEVEL_FIELD, level.toString());
+			builder.addField(GelfMessageBuilder.LOGGER_NATIVE_LEVEL_FIELD, level.toString());
 			builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, event.getLoggerName());
 			builder.addField(JAVA_TIMESTAMP, timeStamp);
 			builder.addFields(event.getProperties());

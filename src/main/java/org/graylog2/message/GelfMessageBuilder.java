@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 public class GelfMessageBuilder {
     public static final String LOGGER_NAME_FIELD = "logger";
     public static final String THREAD_NAME_FIELD = "thread";
-	public static final String LOGGER_LEVEL_FIELD = "level";
+	public static final String LOGGER_NATIVE_LEVEL_FIELD = "nativeLevel";
 	public static final String SOURCE_CLASS_FIELD = "SourceClassName";
 	public static final String SOURCE_METHOD_FIELD = "SourceMethodName";
 	
