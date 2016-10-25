@@ -128,7 +128,6 @@ public class GelfHandler extends Handler {
 			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
 			builder.addFields(gelfLogRecord.getFields());
 		}
-		// builder.addFields(fields);
 
 		return builder.build();
 	}
