@@ -16,14 +16,12 @@ public class JULConfigurationManager {
 			configuration.setOriginHost(originHost);
 		}
 		configuration.setFacility(facility);
-		configuration.setAdditionalFields(properties.getProperties("additionalField"));
+		configuration.addAdditionalFields(properties.getProperties("additionalField"));
 
 		return configuration;
 	}
 
 	public static GelfSenderConfiguration getGelfSenderConfiguration(JULProperties properties) {
-		String port = properties.getProperty("graylogPort");
-		String sendBufferSize = properties.getProperty("socketSendBufferSize");
 		String maxRetries = properties.getProperty("maxRetries");
 		if (maxRetries == null) {
 			maxRetries = properties.getProperty("amqpMaxRetries");
@@ -33,15 +31,8 @@ public class JULConfigurationManager {
 		String queueTimeout = properties.getProperty("threadedQueueTimeout");
 
 		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
-		configuration.setGraylogURI(properties.getProperty("graylogHost"));
-		if (port != null) {
-			configuration.setGraylogPort(Integer.parseInt(port));
-		}
-		configuration.setAmqpURI(properties.getProperty("amqpURI"));
-		if (sendBufferSize != null) {
-			configuration.setSocketSendBufferSize(Integer.parseInt(sendBufferSize));
-		}
-		configuration.setTcpKeepalive("true".equalsIgnoreCase(properties.getProperty("tcpKeepalive")));
+
+		configuration.setTargetURI(getURI(properties));
 		configuration.setThreaded("true".equalsIgnoreCase(properties.getProperty("threaded")));
 		if (sendTimeout != null) {
 			configuration.setSendTimeout(Integer.valueOf(sendTimeout));
@@ -52,11 +43,33 @@ public class JULConfigurationManager {
 		if (queueTimeout != null) {
 			configuration.setThreadedQueueTimeout(Integer.valueOf(queueTimeout));
 		}
-		configuration.setAmqpExchangeName(properties.getProperty("amqpExchangeName"));
-		configuration.setAmqpRoutingKey(properties.getProperty("amqpRoutingKey"));
 		if (maxRetries != null) {
 			configuration.setMaxRetries(Integer.valueOf(maxRetries));
 		}
 		return configuration;
+	}
+
+	private static String getURI(JULProperties properties) {
+		String uri = properties.getProperty("targetURI");
+		if (uri == null) {
+			// All this is for backwards compatibility :-(
+			String host = properties.getProperty("graylogHost");
+			String amqpURI = properties.getProperty("amqpURI");
+			if (host != null) {
+				if (host.indexOf(':') == -1) {
+					host = GelfSenderConfiguration.DEFAULT_PROTOCOL + "://" + host;
+				}
+				String port = properties.getProperty("graylogPort");
+				if (port != null) {
+					uri = host + ":" + port;
+				}
+			} else if (amqpURI != null) {
+				String exchange = properties.getProperty("amqpExchangeName");
+				String routingKey = properties.getProperty("amqpRoutingKey");
+				uri = amqpURI + (amqpURI.indexOf('?') == -1 ? '?' : '&') + "exchange=" + exchange + "&routingKey="
+						+ routingKey;
+			}
+		}
+		return uri;
 	}
 }

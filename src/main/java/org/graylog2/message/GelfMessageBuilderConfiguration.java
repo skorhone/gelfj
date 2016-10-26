@@ -6,16 +6,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GelfMessageBuilderConfiguration {
-	private String facility;
 	private String originHost;
 	private Map<String, String> additionalFields;
 
-	public String getFacility() {
-		return facility;
+	public GelfMessageBuilderConfiguration() {
+		this.additionalFields = new HashMap<String, String>();
 	}
 
 	public void setFacility(String facility) {
-		this.facility = facility;
+		addAdditionalField("facility", facility);
 	}
 
 	public String getOriginHost() {
@@ -30,14 +29,15 @@ public class GelfMessageBuilderConfiguration {
 	}
 
 	public Map<String, String> getAdditionalFields() {
-		if (additionalFields == null) {
-			additionalFields = new HashMap<String, String>();
-		}
 		return additionalFields;
 	}
 
-	public void setAdditionalFields(Map<String, String> additionalFields) {
-		this.additionalFields = additionalFields;
+	public void addAdditionalField(String key, String value) {
+		this.additionalFields.put(key, value);
+	}
+
+	public void addAdditionalFields(Map<String, String> additionalFields) {
+		this.additionalFields.putAll(additionalFields);
 	}
 
 	private String getLocalHostName() {

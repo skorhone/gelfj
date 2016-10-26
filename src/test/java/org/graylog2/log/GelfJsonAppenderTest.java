@@ -50,17 +50,6 @@ public class GelfJsonAppenderTest {
 		assertThat("Full message is still JSON", (String) gelfSender.getLastMessage().getFullMessage(), is(message));
 	}
 
-	@Test
-	public void testBrokenJasom() throws Exception {
-		String message = "{\"simpleProperty\":\"hello gelf, \"message\":\"test}";
-		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO,
-				message, new RuntimeException("LOL"));
-		gelfAppender.append(event);
-
-		assertThat("No additional fields are created", gelfSender.getLastMessage().getAdditionalFields().size(), is(0));
-		assertThat("Full message is the same", (String) gelfSender.getLastMessage().getFullMessage(), is(message));
-	}
-
 	private class TestGelfSender implements GelfSender {
 		private GelfMessage lastMessage;
 

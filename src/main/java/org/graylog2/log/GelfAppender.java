@@ -1,8 +1,5 @@
 package org.graylog2.log;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.ErrorManager;
 
 import org.apache.log4j.AppenderSkeleton;
@@ -16,7 +13,6 @@ import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderConfigurationException;
 import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
-import org.json.simple.JSONValue;
 
 /**
  *
@@ -30,51 +26,21 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 	private GelfMessageFactory messageFactory;
 	private boolean extractStacktrace;
 	private boolean addExtendedInformation;
-	private boolean includeLocation = true;
-	private Map<String, String> fields;
+	private boolean includeLocation;
 
 	public GelfAppender() {
-		super();
 		this.gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
 		this.senderConfiguration = new GelfSenderConfiguration();
 		this.messageFactory = new GelfMessageFactory();
+		this.includeLocation = true;
 	}
 
-	@SuppressWarnings("unchecked")
-	public void setAdditionalFields(String additionalFields) {
-		fields = (Map<String, String>) JSONValue.parse(additionalFields.replaceAll("'", "\""));
+	public String getTargetURI() {
+		return senderConfiguration.getTargetURI();
 	}
 
-	public String getGraylogHost() {
-		return senderConfiguration.getGraylogURI();
-	}
-
-	public void setGraylogHost(String graylogHost) {
-		senderConfiguration.setGraylogURI(graylogHost);
-	}
-
-	public int getGraylogPort() {
-		return senderConfiguration.getGraylogPort();
-	}
-
-	public boolean isTcpKeepalive() {
-		return senderConfiguration.isTcpKeepalive();
-	}
-
-	public void setTcpKeepalive(boolean tcpKeepalive) {
-		senderConfiguration.setTcpKeepalive(tcpKeepalive);
-	}
-
-	public void setGraylogPort(int graylogPort) {
-		senderConfiguration.setGraylogPort(graylogPort);
-	}
-
-	public int getSocketSendBufferSize() {
-		return senderConfiguration.getSocketSendBufferSize();
-	}
-
-	public void setSocketSendBufferSize(int socketSendBufferSize) {
-		senderConfiguration.setSocketSendBufferSize(socketSendBufferSize);
+	public void setTargetURI(String graylogHost) {
+		senderConfiguration.setTargetURI(graylogHost);
 	}
 
 	public boolean isThreaded() {
@@ -101,30 +67,6 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		senderConfiguration.setThreadedQueueTimeout(threadedQueueTimeout);
 	}
 
-	public String getAmqpURI() {
-		return senderConfiguration.getAmqpURI();
-	}
-
-	public void setAmqpURI(String amqpURI) {
-		senderConfiguration.setAmqpURI(amqpURI);
-	}
-
-	public String getAmqpExchangeName() {
-		return senderConfiguration.getAmqpExchangeName();
-	}
-
-	public void setAmqpExchangeName(String amqpExchangeName) {
-		senderConfiguration.setAmqpExchangeName(amqpExchangeName);
-	}
-
-	public String getAmqpRoutingKey() {
-		return senderConfiguration.getAmqpRoutingKey();
-	}
-
-	public void setAmqpRoutingKey(String amqpRoutingKey) {
-		senderConfiguration.setAmqpRoutingKey(amqpRoutingKey);
-	}
-
 	public int getSendTimeout() {
 		return senderConfiguration.getSendTimeout();
 	}
@@ -137,18 +79,8 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		return senderConfiguration.getMaxRetries();
 	}
 
-	public void setMaxRetries(int amqpMaxRetries) {
-		senderConfiguration.setMaxRetries(amqpMaxRetries);
-	}
-
-	@Deprecated
-	public int getAmqpMaxRetries() {
-		return senderConfiguration.getMaxRetries();
-	}
-
-	@Deprecated
-	public void setAmqpMaxRetries(int amqpMaxRetries) {
-		senderConfiguration.setMaxRetries(amqpMaxRetries);
+	public void setMaxRetries(int maxRetries) {
+		senderConfiguration.setMaxRetries(maxRetries);
 	}
 
 	public boolean isExtractStacktrace() {
@@ -171,12 +103,19 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		return gelfMessageBuilderConfiguration;
 	}
 
-	public String getFacility() {
-		return gelfMessageBuilderConfiguration.getFacility();
-	}
-
 	public void setFacility(String facility) {
 		gelfMessageBuilderConfiguration.setFacility(facility);
+	}
+
+	public void setFields(String encodedFields) {
+		for (String encodedField : encodedFields.split(",")) {
+			int equals = encodedField.indexOf('=');
+			if (equals != -1) {
+				String key = encodedField.substring(0, equals).trim();
+				String value = encodedField.substring(equals + 1).trim();
+				gelfMessageBuilderConfiguration.addAdditionalField(key, value);
+			}
+		}
 	}
 
 	public boolean isAddExtendedInformation() {
@@ -193,13 +132,6 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 
 	public void setIncludeLocation(boolean includeLocation) {
 		this.includeLocation = includeLocation;
-	}
-
-	public Map<String, String> getFields() {
-		if (fields == null) {
-			fields = new HashMap<String, String>();
-		}
-		return Collections.unmodifiableMap(fields);
 	}
 
 	@Override

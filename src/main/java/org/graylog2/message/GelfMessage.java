@@ -18,7 +18,6 @@ public class GelfMessage {
 	private String fullMessage;
 	private long javaTimestamp;
 	private String level;
-	private String facility;
 	private String line;
 	private String file;
 	private Map<String, Object> additionalFields;
@@ -35,7 +34,6 @@ public class GelfMessage {
 		sb.append("\t\"short_message\": ").append(JSON.encodeQuoted(getShortMessage())).append(",\r\n");
 		sb.append("\t\"full_message\": ").append(JSON.encodeQuoted(getFullMessage())).append(",\r\n");
 		sb.append("\t\"timestamp\": ").append(getTimestamp()).append(",\r\n");
-		sb.append("\t\"facility\": ").append(JSON.encodeQuoted(getFacility())).append(",\r\n");
 		if (getFile() != null) {
 			sb.append("\t\"file\": ").append(JSON.encodeQuoted(getFile())).append(",\r\n");
 		}
@@ -58,10 +56,8 @@ public class GelfMessage {
 					} else {
 						value = JSON.encodeQuoted(additionalField.getValue().toString());
 					}
-				} else {
-					value = "null";
+					sb.append(",\r\n\t").append(key).append(": ").append(value);
 				}
-				sb.append(",\r\n\t").append(key).append(": ").append(value);
 			}
 		}
 		sb.append("}\r\n");
@@ -129,14 +125,6 @@ public class GelfMessage {
 
 	public void setLevel(String level) {
 		this.level = level;
-	}
-
-	public String getFacility() {
-		return facility;
-	}
-
-	public void setFacility(String facility) {
-		this.facility = facility;
 	}
 
 	public Long getLine() {

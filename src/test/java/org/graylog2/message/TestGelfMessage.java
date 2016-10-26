@@ -5,6 +5,5 @@ public class TestGelfMessage extends GelfMessage {
 		setHost("localhost");
 		setShortMessage("short");
 		setFullMessage("full");
-		setFacility("test");
 	}
 }

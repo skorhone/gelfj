@@ -1,126 +1,55 @@
 package org.graylog2.sender;
 
+import java.net.URI;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class GelfSenderConfiguration {
-	private static final String DEFAULT_PROTOCOL = "udp";
+	public static final String DEFAULT_PROTOCOL = "udp";
 	public static final int DEFAULT_PORT = 12201;
 
-	private String protocol;
-	private String graylogURI;
-	private String graylogHost;
-	private int graylogPort;
-	private String amqpURI;
-	private String amqpExchangeName;
-	private String amqpRoutingKey;
-	private boolean tcpKeepalive;
+	private URI targetURI;
 	private boolean threaded;
 	private int threadedQueueMaxDepth;
 	private int threadedQueueTimeout;
-	private int socketSendBufferSize;
 	private int sendTimeout;
 	private int maxRetries;
 
 	public GelfSenderConfiguration() {
-		this.protocol = DEFAULT_PROTOCOL;
-		this.graylogPort = DEFAULT_PORT;
 		this.maxRetries = 5;
 		this.sendTimeout = 1000;
 		this.threadedQueueTimeout = 1000;
 		this.threadedQueueMaxDepth = 1000;
 	}
 
-	public String getGraylogURI() {
-		if (graylogURI == null) {
-			return protocol + ":" + graylogHost + ":" + graylogPort;
-		}
-		return graylogURI;
+	public String getTargetURI() {
+		return targetURI.toString();
 	}
 
-	public void setGraylogURI(String graylogURI) {
-		this.graylogURI = graylogURI;
-		if (graylogURI != null) {
-			String[] parts = graylogURI.split(":");
-			if (parts.length == 0 || parts.length > 3) {
-				throw new IllegalArgumentException("Unsupported URI format: " + graylogURI);
-			}
-			if (parts.length == 1) {
-				setGraylogHost(parts[0]);
-			} else {
-				setProtocol(parts[0]);
-				if (!"http".equals(getProtocol()) && !"https".equals(getProtocol())) {
-					setGraylogHost(parts[1]);
-					if (parts.length == 3) {
-						setGraylogPort(Integer.valueOf(parts[2]));
-					}
-				}
-			}
+	public void setTargetURI(String targetURI) {
+		this.targetURI = toURI(targetURI);
+	}
+
+	private URI toURI(String uri) {
+		int colon = uri.indexOf(':');
+		if (colon == -1) {
+			uri = DEFAULT_PROTOCOL + "://" + uri;
+		} else if (!uri.substring(colon).startsWith("://")) {
+			uri = uri.substring(0, colon + 1) + "//" + uri.substring(colon + 1);
 		}
+		return URI.create(uri);
 	}
 
 	public String getProtocol() {
-		return protocol;
+		return targetURI.getScheme().toLowerCase();
 	}
 
-	public void setProtocol(String protocol) {
-		this.protocol = protocol != null ? protocol.toLowerCase() : null;
+	public String getTargetHost() {
+		return targetURI.getHost();
 	}
 
-	public String getGraylogHost() {
-		return graylogHost;
-	}
-
-	public void setGraylogHost(String graylogHost) {
-		this.graylogHost = graylogHost;
-	}
-
-	public int getGraylogPort() {
-		return graylogPort;
-	}
-
-	public void setGraylogPort(int graylogPort) {
-		this.graylogPort = graylogPort;
-	}
-
-	public String getAmqpURI() {
-		return amqpURI;
-	}
-
-	public void setAmqpURI(String amqpURI) {
-		if (amqpURI != null) {
-			setProtocol("amqp");
-			this.amqpURI = amqpURI;
-		}
-	}
-
-	public String getAmqpExchangeName() {
-		return amqpExchangeName;
-	}
-
-	public void setAmqpExchangeName(String amqpExchangeName) {
-		this.amqpExchangeName = amqpExchangeName;
-	}
-
-	public String getAmqpRoutingKey() {
-		return amqpRoutingKey;
-	}
-
-	public void setAmqpRoutingKey(String amqpRoutingKey) {
-		this.amqpRoutingKey = amqpRoutingKey;
-	}
-
-	public int getSocketSendBufferSize() {
-		return socketSendBufferSize;
-	}
-
-	public void setSocketSendBufferSize(int socketSendBufferSize) {
-		this.socketSendBufferSize = socketSendBufferSize;
-	}
-
-	public boolean isTcpKeepalive() {
-		return tcpKeepalive;
-	}
-
-	public void setTcpKeepalive(boolean tcpKeepalive) {
-		this.tcpKeepalive = tcpKeepalive;
+	public int getTargetPort() {
+		return targetURI.getPort();
 	}
 
 	public boolean isThreaded() {
@@ -138,28 +67,47 @@ public class GelfSenderConfiguration {
 	public void setThreadedQueueMaxDepth(int threadedQueueMaxDepth) {
 		this.threadedQueueMaxDepth = threadedQueueMaxDepth;
 	}
-	
+
 	public int getThreadedQueueTimeout() {
 		return threadedQueueTimeout;
 	}
-	
+
 	public void setThreadedQueueTimeout(int threadedQueueTimeout) {
 		this.threadedQueueTimeout = threadedQueueTimeout;
 	}
-	
+
 	public int getSendTimeout() {
 		return sendTimeout;
 	}
-	
+
 	public void setSendTimeout(int sendTimeout) {
 		this.sendTimeout = sendTimeout;
 	}
-	
+
 	public int getMaxRetries() {
 		return maxRetries;
 	}
 
 	public void setMaxRetries(int maxRetries) {
 		this.maxRetries = maxRetries;
+	}
+
+	public String getURIOption(String key) {
+		String query = targetURI.getQuery();
+		if (query != null) {
+			Matcher matcher = Pattern.compile("(^|&)" + key + "=([^&]*)").matcher(query);
+			if (matcher.find()) {
+				return matcher.group(2);
+			}
+		}
+		return null;
+	}
+
+	public int getSendBufferSize() {
+		String sendBufferSize = getURIOption("sendBufferSize");
+		if (sendBufferSize != null) {
+			return Integer.valueOf(sendBufferSize);
+		}
+		return 0;
 	}
 }

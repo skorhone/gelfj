@@ -27,9 +27,9 @@ public class GelfUDPSender implements GelfSender {
 	private boolean shutdown;
 
 	public GelfUDPSender(GelfSenderConfiguration configuration, boolean enableRetry) {
-		this.destinationHost = configuration.getGraylogHost();
-		this.destinationPort = configuration.getGraylogPort();
-		this.sendBufferSize = configuration.getSocketSendBufferSize();
+		this.destinationHost = configuration.getTargetHost();
+		this.destinationPort = configuration.getTargetPort();
+		this.sendBufferSize = configuration.getSendBufferSize();
 		this.sendTimeout = configuration.getSendTimeout();
 		this.maxRetries = enableRetry ? configuration.getMaxRetries() : 0;
 		this.bufferManager = new UDPBufferManager();

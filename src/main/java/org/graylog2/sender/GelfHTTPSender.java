@@ -12,9 +12,11 @@ import org.graylog2.message.GelfMessage;
 public class GelfHTTPSender implements GelfSender {
 	private final URL url;
 	private boolean shutdown;
+	private int timeout;
 
 	public GelfHTTPSender(GelfSenderConfiguration configuration) throws MalformedURLException {
-		url = new URL(configuration.getGraylogURI());
+		url = new URL(configuration.getTargetURI());
+		timeout = configuration.getSendTimeout();
 	}
 
 	public void sendMessage(GelfMessage message) throws GelfSenderException {
@@ -24,7 +26,9 @@ public class GelfHTTPSender implements GelfSender {
 		try {
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setDoOutput(true);
-			connection.setDoInput(false);
+			connection.setDoInput(true);
+			connection.setConnectTimeout(timeout);
+			connection.setReadTimeout(timeout);
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Content-Type", "application/json");
 			connection.setRequestProperty("Content-Encoding", "gzip");

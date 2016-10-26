@@ -59,10 +59,6 @@ public class GelfConsoleAppender extends ConsoleAppender implements GelfMessageP
 		return gelfMessageBuilderConfiguration.getOriginHost();
 	}
 
-	public String getFacility() {
-		return gelfMessageBuilderConfiguration.getFacility();
-	}
-
 	public GelfMessageBuilderConfiguration getGelfMessageBuilderConfiguration() {
 		return gelfMessageBuilderConfiguration;
 	}

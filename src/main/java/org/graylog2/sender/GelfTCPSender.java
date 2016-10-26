@@ -23,11 +23,11 @@ public class GelfTCPSender implements GelfSender {
 	private SocketChannel channel;
 
 	public GelfTCPSender(GelfSenderConfiguration configuration) {
-		this.host = configuration.getGraylogHost();
-		this.port = configuration.getGraylogPort();
-		this.sendBufferSize = configuration.getSocketSendBufferSize();
+		this.host = configuration.getTargetHost();
+		this.port = configuration.getTargetPort();
+		this.sendBufferSize = configuration.getSendBufferSize();
 		this.sendTimeout = configuration.getSendTimeout();
-		this.keepalive = configuration.isTcpKeepalive();
+		this.keepalive = "true".equalsIgnoreCase(configuration.getURIOption("keepalive"));
 		this.bufferManager = new TCPBufferManager();
 	}
 

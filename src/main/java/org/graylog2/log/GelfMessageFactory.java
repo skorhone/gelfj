@@ -16,7 +16,6 @@ import org.graylog2.message.GelfMessageBuilderException;
 public class GelfMessageFactory {
 	private static Method methodGetTimeStamp = null;
 	private static final String LOGGER_NDC = "loggerNdc";
-	private static final String JAVA_TIMESTAMP = "timestampMs";
 
 	static {
 		Method[] declaredMethods = LoggingEvent.class.getDeclaredMethods();
@@ -36,7 +35,7 @@ public class GelfMessageFactory {
 
 		GelfMessageBuilder builder = new GelfMessageBuilder(provider.getGelfMessageBuilderConfiguration());
 
-		if (provider.isIncludeLocation() && event.locationInformationExists()) {
+		if (provider.isIncludeLocation()) {
 			LocationInfo locationInformation = event.getLocationInformation();
 			builder.setFile(locationInformation.getFileName());
 			builder.setLine(locationInformation.getLineNumber());
@@ -53,7 +52,6 @@ public class GelfMessageFactory {
 			builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, event.getThreadName());
 			builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, level.toString());
 			builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, event.getLoggerName());
-			builder.addField(JAVA_TIMESTAMP, timeStamp);
 			builder.addFields(event.getProperties());
 			String ndc = event.getNDC();
 			if (ndc != null) {

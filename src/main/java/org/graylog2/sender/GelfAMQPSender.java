@@ -15,8 +15,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class GelfAMQPSender implements GelfSender {
-	private volatile boolean shutdown = false;
-
+	private volatile boolean shutdown;
 	private final ConnectionFactory factory;
 	private Connection connection;
 	private Channel channel;
@@ -28,16 +27,16 @@ public class GelfAMQPSender implements GelfSender {
 	public GelfAMQPSender(GelfSenderConfiguration configuration, boolean enableRetry)
 			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
 		this.factory = new ConnectionFactory();
-		this.factory.setUri(configuration.getAmqpURI());
-		this.exchangeName = configuration.getAmqpExchangeName();
-		this.routingKey = configuration.getAmqpRoutingKey();
+		this.factory.setUri(configuration.getTargetURI());
+		this.exchangeName = configuration.getURIOption("exchange");
+		this.routingKey = configuration.getURIOption("routingKey");
 		this.maxRetries = enableRetry ? configuration.getMaxRetries() : 0;
 		this.bufferManager = new AMQPBufferManager();
 	}
 
 	public void sendMessage(GelfMessage message) throws GelfSenderException {
 		String uuid = UUID.randomUUID().toString();
-		String messageid = "gelf" + message.getHost() + message.getFacility() + message.getTimestamp() + uuid;
+		String messageid = "gelf-" + message.getHost() + "-" + message.getTimestamp() + "-" + uuid;
 
 		int tries = 0;
 		Exception lastException = null;

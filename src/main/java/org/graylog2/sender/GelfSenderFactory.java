@@ -17,11 +17,8 @@ public class GelfSenderFactory {
 
 	public GelfSender createSender(GelfSenderConfiguration configuration) {
 		GelfSender gelfSender = null;
-		if (configuration.getGraylogHost() == null && configuration.getAmqpURI() == null) {
-			throw new GelfSenderConfigurationException("Graylog2 hostname and amqp uri are empty!");
-		}
-		if (configuration.getGraylogHost() != null && configuration.getAmqpURI() != null) {
-			throw new GelfSenderConfigurationException("Graylog2 hostname and amqp uri are both informed!");
+		if (configuration.getTargetURI() == null) {
+			throw new GelfSenderConfigurationException("Target uri is empty!");
 		}
 		try {
 			if ("tcp".equals(configuration.getProtocol())) {
@@ -40,18 +37,17 @@ public class GelfSenderFactory {
 			}
 			return gelfSender;
 		} catch (UnknownHostException e) {
-			throw new GelfSenderConfigurationException("Unknown Graylog2 hostname:" + configuration.getGraylogHost(),
-					e);
+			throw new GelfSenderConfigurationException("Unknown Graylog2 hostname:" + configuration.getTargetHost(), e);
 		} catch (SocketException e) {
 			throw new GelfSenderConfigurationException("Socket exception", e);
 		} catch (IOException e) {
 			throw new GelfSenderConfigurationException("IO exception", e);
 		} catch (URISyntaxException e) {
-			throw new GelfSenderConfigurationException("AMQP uri exception", e);
+			throw new GelfSenderConfigurationException("URI exception", e);
 		} catch (NoSuchAlgorithmException e) {
-			throw new GelfSenderConfigurationException("AMQP algorithm exception", e);
+			throw new GelfSenderConfigurationException("Algorithm exception", e);
 		} catch (KeyManagementException e) {
-			throw new GelfSenderConfigurationException("AMQP key exception", e);
+			throw new GelfSenderConfigurationException("Key exception", e);
 		} catch (Exception e) {
 			throw new GelfSenderConfigurationException("Unknown exception while configuring GelfSender", e);
 		}

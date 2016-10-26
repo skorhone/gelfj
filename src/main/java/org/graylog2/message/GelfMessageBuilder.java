@@ -15,7 +15,6 @@ public class GelfMessageBuilder {
 	public GelfMessageBuilder(GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration) {
 		this.gelfMessage = new GelfMessage();
 		gelfMessage.setHost(gelfMessageBuilderConfiguration.getOriginHost());
-		gelfMessage.setFacility(gelfMessageBuilderConfiguration.getFacility());
 		addFields(gelfMessageBuilderConfiguration.getAdditionalFields());
 	}
 

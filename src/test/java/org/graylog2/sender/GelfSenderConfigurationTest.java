@@ -15,45 +15,54 @@ public class GelfSenderConfigurationTest {
 
 	@Test
 	public void testSetTcpURI() {
-		configuration.setGraylogURI("tcp:localhost");
+		configuration.setTargetURI("tcp:localhost");
 		assertEquals("tcp", configuration.getProtocol());
-		assertEquals("localhost", configuration.getGraylogHost());
+		assertEquals("localhost", configuration.getTargetHost());
 	}
 
 	@Test
 	public void testSetTcpURIWithPort() {
-		configuration.setGraylogURI("tcp:localhost:1000");
+		configuration.setTargetURI("tcp:localhost:1000");
 		assertEquals("tcp", configuration.getProtocol());
-		assertEquals("localhost", configuration.getGraylogHost());
-		assertEquals(1000, configuration.getGraylogPort());
+		assertEquals("localhost", configuration.getTargetHost());
+		assertEquals(1000, configuration.getTargetPort());
 	}
 
 	@Test
 	public void testSetUdpURI() {
-		configuration.setGraylogURI("udp:localhost");
+		configuration.setTargetURI("udp:localhost");
 		assertEquals("udp", configuration.getProtocol());
-		assertEquals("localhost", configuration.getGraylogHost());
+		assertEquals("localhost", configuration.getTargetHost());
 	}
 
 	@Test
 	public void testSetUdpURIWithPort() {
-		configuration.setGraylogURI("udp:localhost:1000");
+		configuration.setTargetURI("udp:localhost:1000");
 		assertEquals("udp", configuration.getProtocol());
-		assertEquals("localhost", configuration.getGraylogHost());
-		assertEquals(1000, configuration.getGraylogPort());
+		assertEquals("localhost", configuration.getTargetHost());
+		assertEquals(1000, configuration.getTargetPort());
 	}
 
 	@Test
 	public void testSetHttpURI() {
-		configuration.setGraylogURI("http://localhost:1000");
+		configuration.setTargetURI("http://localhost:1000");
 		assertEquals("http", configuration.getProtocol());
-		assertEquals("http://localhost:1000", configuration.getGraylogURI());
+		assertEquals("http://localhost:1000", configuration.getTargetURI());
 	}
 
 	@Test
 	public void testSetHttpsURI() {
-		configuration.setGraylogURI("https://localhost:1000");
+		configuration.setTargetURI("https://localhost:1000");
 		assertEquals("https", configuration.getProtocol());
-		assertEquals("https://localhost:1000", configuration.getGraylogURI());
+		assertEquals("https://localhost:1000", configuration.getTargetURI());
+	}
+
+	@Test
+	public void testSetAMQP() {
+		configuration
+				.setTargetURI("amqp://userName:password@hostName:portNumber/virtualHost?exchange=foo&routingKey=bar");
+		assertEquals("amqp", configuration.getProtocol());
+		assertEquals("foo", configuration.getURIOption("exchange"));
+		assertEquals("bar", configuration.getURIOption("routingKey"));
 	}
 }
