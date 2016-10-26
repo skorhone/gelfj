@@ -71,10 +71,6 @@ public class GelfAppender extends AppenderSkeleton implements GelfMessageProvide
 		return senderConfiguration.getSendTimeout();
 	}
 
-	public void setSendTimeout(int sendTimeout) {
-		senderConfiguration.setSendTimeout(sendTimeout);
-	}
-
 	public int getMaxRetries() {
 		return senderConfiguration.getMaxRetries();
 	}

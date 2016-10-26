@@ -26,7 +26,6 @@ public class JULConfigurationManager {
 		if (maxRetries == null) {
 			maxRetries = properties.getProperty("amqpMaxRetries");
 		}
-		String sendTimeout = properties.getProperty("sendTimeout");
 		String queueMaxDepth = properties.getProperty("threadedQueueMaxDepth");
 		String queueTimeout = properties.getProperty("threadedQueueTimeout");
 
@@ -34,9 +33,6 @@ public class JULConfigurationManager {
 
 		configuration.setTargetURI(getURI(properties));
 		configuration.setThreaded("true".equalsIgnoreCase(properties.getProperty("threaded")));
-		if (sendTimeout != null) {
-			configuration.setSendTimeout(Integer.valueOf(sendTimeout));
-		}
 		if (queueMaxDepth != null) {
 			configuration.setThreadedQueueMaxDepth(Integer.valueOf(queueMaxDepth));
 		}

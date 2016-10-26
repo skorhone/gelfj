@@ -53,10 +53,21 @@ GelfAppender supports the following options:
 targetURI format
 ----------------
 
-**UDP** udp://<host>:<port>?sendBufferSize=<size>&sendTimeout=<timeout in ms>&retries=<max retries>
-**TCP** tcp://<host>:<port>?sendBufferSize=<size>&sendTimeout=<timeout in ms>&retries=<max retries>&keepalive=<true/false>
-**HTTP** http://<host>:<port>?sendBufferSize=<size>&connectTimeout=<timeout in ms>&retries=<max retries>
-**AMQP** http://<host>:<port>?exchange=<exchange name>&routingKey=<routing key>&retries=<max retries>
+**UDP**
+
+    udp://<host>[:<port>][?sendBufferSize=<size>&sendTimeout=<timeout in ms>]
+
+**TCP**
+
+    tcp://<host>[:<port>][?sendBufferSize=<size>&sendTimeout=<timeout in ms>&keepalive=<true/false>]
+
+**HTTP**
+
+    http://<host>[:<port>][/path][?sendBufferSize=<size>&sendTimeout=<timeout in ms>]
+
+**AMQP**
+
+    http://<host>[:<port>][?exchange=<exchange name>&routingKey=<routing key>]
 
 Log4j appender
 --------------

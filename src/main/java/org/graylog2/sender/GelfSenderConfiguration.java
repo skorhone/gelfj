@@ -12,12 +12,10 @@ public class GelfSenderConfiguration {
 	private boolean threaded;
 	private int threadedQueueMaxDepth;
 	private int threadedQueueTimeout;
-	private int sendTimeout;
 	private int maxRetries;
 
 	public GelfSenderConfiguration() {
 		this.maxRetries = 5;
-		this.sendTimeout = 1000;
 		this.threadedQueueTimeout = 1000;
 		this.threadedQueueMaxDepth = 1000;
 	}
@@ -76,14 +74,6 @@ public class GelfSenderConfiguration {
 		this.threadedQueueTimeout = threadedQueueTimeout;
 	}
 
-	public int getSendTimeout() {
-		return sendTimeout;
-	}
-
-	public void setSendTimeout(int sendTimeout) {
-		this.sendTimeout = sendTimeout;
-	}
-
 	public int getMaxRetries() {
 		return maxRetries;
 	}
@@ -101,6 +91,14 @@ public class GelfSenderConfiguration {
 			}
 		}
 		return null;
+	}
+	
+	public int getSendTimeout() {
+		String sendTimeout = getURIOption("sendTimeout");
+		if (sendTimeout != null) {
+			return Integer.valueOf(sendTimeout);
+		}
+		return 1000;
 	}
 
 	public int getSendBufferSize() {
