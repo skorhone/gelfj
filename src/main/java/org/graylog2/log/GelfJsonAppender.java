@@ -1,6 +1,7 @@
 package org.graylog2.log;
 
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.log4j.spi.ErrorCode;
 import org.apache.log4j.spi.LoggingEvent;
@@ -30,8 +31,12 @@ public class GelfJsonAppender extends GelfAppender {
 				@SuppressWarnings("unchecked")
 				Map<String, String> fields = (Map<String, String>) JSONValue.parse(event.getMessage().toString());
 				if (fields != null) {
-					for (String key : fields.keySet()) {
-						gelfMessage.addField(key, fields.get(key));
+					for (Entry<String,String> entry : fields.entrySet()) {
+						if ("message".equals(entry.getKey())) {
+							gelfMessage.setShortMessage(entry.getValue());
+						} else {
+							gelfMessage.addField(entry.getKey(), entry.getValue());
+						}
 					}
 				}
 				sender.sendMessage(gelfMessage);

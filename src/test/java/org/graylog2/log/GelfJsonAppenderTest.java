@@ -45,9 +45,7 @@ public class GelfJsonAppenderTest {
 
 		assertThat("simpleProperty property exists in additional fields",
 				(String) gelfSender.getLastMessage().getAdditionalFields().get("simpleProperty"), is("hello gelf"));
-		assertThat("message property exists in additional fields",
-				(String) gelfSender.getLastMessage().getAdditionalFields().get("message"), is("test"));
-		assertThat("Full message is still JSON", (String) gelfSender.getLastMessage().getFullMessage(), is(message));
+		assertThat("Short message is set", (String) gelfSender.getLastMessage().getShortMessage(), is("test"));
 	}
 
 	private class TestGelfSender implements GelfSender {

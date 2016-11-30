@@ -1,28 +1,12 @@
 package org.graylog2.logging;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
 public class SimpleFormatter extends Formatter {
-	private boolean extractStacktrace;
-
-	public SimpleFormatter(boolean extractStacktrace) {
-		this.extractStacktrace = extractStacktrace;
-	}
-
 	@Override
 	public String format(LogRecord record) {
 		String message = formatMessage(record);
-		if (extractStacktrace) {
-			final Throwable thrown = record.getThrown();
-			if (null != thrown) {
-				final StringWriter sw = new StringWriter();
-				thrown.printStackTrace(new PrintWriter(sw));
-				message += "\n\r" + sw.toString();
-			}
-		}
 		return message != null ? message : "";
 	}
 

@@ -17,6 +17,7 @@ public class JULConfigurationManager {
 		}
 		configuration.setFacility(facility);
 		configuration.addAdditionalFields(properties.getProperties("additionalField"));
+		configuration.setExtractStacktrace("true".equalsIgnoreCase(properties.getProperty("extractStacktrace")));
 
 		return configuration;
 	}

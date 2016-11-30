@@ -7,6 +7,9 @@ import java.util.regex.Pattern;
 public class GelfSenderConfiguration {
 	public static final String DEFAULT_PROTOCOL = "udp";
 	public static final int DEFAULT_PORT = 12201;
+	public static final int DEFAULT_RETRIES = 5;
+	public static final int DEFAULT_THREADED_QUEUE_TIMEOUT = 100;
+	public static final int DEFAULT_THREADED_QUEUE_MAX_DEPTH = 100;
 
 	private URI targetURI;
 	private boolean threaded;
@@ -15,9 +18,9 @@ public class GelfSenderConfiguration {
 	private int maxRetries;
 
 	public GelfSenderConfiguration() {
-		this.maxRetries = 5;
-		this.threadedQueueTimeout = 1000;
-		this.threadedQueueMaxDepth = 1000;
+		this.maxRetries = DEFAULT_RETRIES;
+		this.threadedQueueTimeout = DEFAULT_THREADED_QUEUE_TIMEOUT;
+		this.threadedQueueMaxDepth = DEFAULT_THREADED_QUEUE_MAX_DEPTH;
 	}
 
 	public String getTargetURI() {

@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class GelfMessageBuilderConfiguration {
 	private String originHost;
+	private boolean extractStacktrace;
 	private Map<String, String> additionalFields;
 
 	public GelfMessageBuilderConfiguration() {
@@ -15,6 +16,10 @@ public class GelfMessageBuilderConfiguration {
 
 	public void setFacility(String facility) {
 		addAdditionalField("facility", facility);
+	}
+	
+	public void setExtractStacktrace(boolean extractStacktrace) {
+		this.extractStacktrace = extractStacktrace;
 	}
 
 	public String getOriginHost() {
@@ -26,6 +31,10 @@ public class GelfMessageBuilderConfiguration {
 
 	public void setOriginHost(String originHost) {
 		this.originHost = originHost;
+	}
+	
+	public boolean isExtractStacktrace() {
+		return extractStacktrace;
 	}
 
 	public Map<String, String> getAdditionalFields() {

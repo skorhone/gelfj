@@ -11,8 +11,7 @@ public class GelfMessage {
 	private static final String ID_NAME = "id";
 	private static final String GELF_VERSION = "1.1";
 	private static final BigDecimal TIME_DIVISOR = new BigDecimal(1000);
-
-	private String version = GELF_VERSION;
+	private String version;
 	private String host;
 	private String shortMessage;
 	private String fullMessage;
@@ -41,7 +40,7 @@ public class GelfMessage {
 		if (line != null) {
 			sb.append("\t\"line\": ").append(line).append(",\r\n");
 		}
-		sb.append("\t\"level\": ").append(getLevel()).append("\r\n");
+		sb.append("\t\"level\": ").append(getLevel());
 
 		for (Map.Entry<String, Object> additionalField : getAdditionalFields().entrySet()) {
 			if (!ID_NAME.equals(additionalField.getKey())) {
@@ -60,7 +59,7 @@ public class GelfMessage {
 				}
 			}
 		}
-		sb.append("}\r\n");
+		sb.append("\r\n}\r\n");
 		return sb.toString();
 	}
 

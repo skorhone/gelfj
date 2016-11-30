@@ -1,6 +1,6 @@
 package org.graylog2.logging;
 
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -43,7 +43,7 @@ public class GelfHandlerTest {
 		myLogger.log(Level.FINE, (String) null);
 
 		assertThat("Message short message", gelfSender.getLastMessage().getShortMessage(), notNullValue());
-		assertThat("Message full message", gelfSender.getLastMessage().getFullMessage(), notNullValue());
+		assertThat("Message full message", gelfSender.getLastMessage().getFullMessage(), nullValue());
 	}
 
 	@Test

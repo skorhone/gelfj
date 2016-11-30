@@ -38,18 +38,34 @@
 	</licenses>
 
 	<dependencies>
+		<!-- Log4j (v1) -->
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
 			<scope>provided</scope>
 		</dependency>
+		<!-- Log4j (v2) -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.7</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.7</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- AMQP (Rabbit MQ) -->		
 		<dependency>
 			<groupId>com.rabbitmq</groupId>
 			<artifactId>amqp-client</artifactId>
 			<version>3.0.4</version>
 			<scope>provided</scope>
 		</dependency>
+		<!-- JSON -->
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>

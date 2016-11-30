@@ -42,8 +42,7 @@ public class GelfHandler extends Handler {
 			setLevel(Level.INFO);
 		}
 
-		boolean extractStacktrace = "true".equalsIgnoreCase(properties.getProperty("extractStacktrace"));
-		setFormatter(new SimpleFormatter(extractStacktrace));
+		setFormatter(new SimpleFormatter());
 
 		final String filter = properties.getProperty("filter");
 		try {
@@ -99,7 +98,8 @@ public class GelfHandler extends Handler {
 
 		GelfMessageBuilder builder = new GelfMessageBuilder(gelfMessageBuilderConfiguration);
 
-		builder.setFullMessage(message);
+		builder.setMessage(message);
+		builder.setThrowable(record.getThrown());
 		builder.setLevel(String.valueOf(levelToSyslogLevel(record.getLevel())));
 		builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, Thread.currentThread().getName());
 		builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, record.getLevel());
