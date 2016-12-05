@@ -9,6 +9,7 @@ import org.apache.log4j.spi.LoggingEvent;
 import org.graylog2.message.GelfMessage;
 import org.graylog2.message.GelfMessageBuilder;
 import org.graylog2.message.GelfMessageBuilderException;
+import org.graylog2.util.Fields;
 
 public class GelfMessageFactory {
 	private static Method methodGetTimeStamp = null;
@@ -24,7 +25,6 @@ public class GelfMessageFactory {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public GelfMessage makeMessage(Layout layout, LoggingEvent event, GelfMessageProvider provider)
 			throws GelfMessageBuilderException {
 		long timeStamp = getTimeStamp(event);
@@ -44,16 +44,18 @@ public class GelfMessageFactory {
 		if (event.getThrowableInformation() != null) {
 			builder.setThrowable(event.getThrowableInformation().getThrowable());
 		}
+		
 		if (provider.isAddExtendedInformation()) {
 			builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, event.getThreadName());
 			builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, level.toString());
 			builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, event.getLoggerName());
-			builder.addFields(event.getProperties());
 			String ndc = event.getNDC();
 			if (ndc != null) {
 				builder.addField(LOGGER_NDC, event.getNDC());
 			}
 		}
+		builder.addFields(Fields.getFields(event.getMessage()));
+		
 		return builder.build();
 	}
 
