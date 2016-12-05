@@ -1,5 +1,6 @@
 package org.graylog2.logging;
 
+import java.util.Map;
 import java.util.logging.ErrorManager;
 import java.util.logging.Filter;
 import java.util.logging.Handler;
@@ -16,6 +17,7 @@ import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderConfigurationException;
 import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
+import org.graylog2.util.Fields;
 
 public class GelfHandler extends Handler {
 	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
@@ -98,6 +100,14 @@ public class GelfHandler extends Handler {
 
 		GelfMessageBuilder builder = new GelfMessageBuilder(gelfMessageBuilderConfiguration);
 
+		Map<String, ? extends Object> fields;
+		if (record instanceof GelfLogRecord) {
+			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
+			fields = gelfLogRecord.getFields();
+		} else {
+			fields = Fields.getFields(record);
+		}
+
 		builder.setMessage(message);
 		builder.setThrowable(record.getThrown());
 		builder.setLevel(String.valueOf(levelToSyslogLevel(record.getLevel())));
@@ -106,11 +116,7 @@ public class GelfHandler extends Handler {
 		builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, record.getLoggerName());
 		builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, record.getSourceClassName());
 		builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, record.getSourceMethodName());
-
-		if (record instanceof GelfLogRecord) {
-			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
-			builder.addFields(gelfLogRecord.getFields());
-		}
+		builder.addFields(fields);
 
 		return builder.build();
 	}

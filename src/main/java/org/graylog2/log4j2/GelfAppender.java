@@ -19,6 +19,7 @@ import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderFactory;
+import org.graylog2.util.Fields;
 
 @Plugin(name = "Gelf", category = "Core", elementType = "appender", printObject = true)
 public class GelfAppender extends AbstractAppender {
@@ -78,6 +79,7 @@ public class GelfAppender extends AbstractAppender {
 			builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, source.getClassName());
 			builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, source.getMethodName());
 		}
+		builder.addFields(Fields.getFields(event.getMessage()));
 		if (ndc != null) {
 			builder.addField(LOGGER_NDC, ndc);
 		}
