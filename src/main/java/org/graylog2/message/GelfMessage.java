@@ -8,6 +8,7 @@ import java.util.Map;
 import org.graylog2.json.JSON;
 
 public class GelfMessage {
+	private static final String C_NL = ",\r\n";
 	private static final String ID_NAME = "id";
 	private static final String GELF_VERSION = "1.1";
 	private static final BigDecimal TIME_DIVISOR = new BigDecimal(1000);
@@ -28,17 +29,17 @@ public class GelfMessage {
 	public String toJson() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("{\r\n");
-		sb.append("\t\"version\": ").append(JSON.encodeQuoted(getVersion())).append(",\r\n");
-		sb.append("\t\"host\": ").append(JSON.encodeQuoted(getHost())).append(",\r\n");
-		sb.append("\t\"short_message\": ").append(JSON.encodeQuoted(getShortMessage())).append(",\r\n");
-		sb.append("\t\"full_message\": ").append(JSON.encodeQuoted(getFullMessage())).append(",\r\n");
-		sb.append("\t\"timestamp\": ").append(getTimestamp()).append(",\r\n");
+		sb.append("\t\"version\": ").append(JSON.encodeQuoted(getVersion())).append(C_NL);
+		sb.append("\t\"host\": ").append(JSON.encodeQuoted(getHost())).append(C_NL);
+		sb.append("\t\"short_message\": ").append(JSON.encodeQuoted(getShortMessage())).append(C_NL);
+		sb.append("\t\"full_message\": ").append(JSON.encodeQuoted(getFullMessage())).append(C_NL);
+		sb.append("\t\"timestamp\": ").append(getTimestamp()).append(C_NL);
 		if (getFile() != null) {
-			sb.append("\t\"file\": ").append(JSON.encodeQuoted(getFile())).append(",\r\n");
+			sb.append("\t\"file\": ").append(JSON.encodeQuoted(getFile())).append(C_NL);
 		}
 		Long line = getLine();
 		if (line != null) {
-			sb.append("\t\"line\": ").append(line).append(",\r\n");
+			sb.append("\t\"line\": ").append(line).append(C_NL);
 		}
 		sb.append("\t\"level\": ").append(getLevel());
 
