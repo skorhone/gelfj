@@ -35,15 +35,15 @@ public class GelfUDPSender implements GelfSender {
 		this.bufferManager = new UDPBufferManager();
 	}
 
-	public void sendMessage(GelfMessage message) throws GelfSenderException {
+	public synchronized void sendMessage(GelfMessage message) throws GelfSenderException {
 		int tries = 0;
 		Exception lastException = null;
 		ByteBuffer[] datagrams = bufferManager.getUDPBuffers(message.toJson());
 		do {
+			if (shutdown) {
+				throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+			}
 			try {
-				if (!isConnected()) {
-					connect();
-				}
 				for (ByteBuffer datagram : datagrams) {
 					sendDatagram(datagram);
 				}
@@ -58,7 +58,17 @@ public class GelfUDPSender implements GelfSender {
 		throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
 	}
 
+	public synchronized void close() {
+		if (!shutdown) {
+			shutdown = true;
+			closeConnection();
+		}
+	}
+
 	private void sendDatagram(ByteBuffer buffer) throws IOException, InterruptedException {
+		if (!isConnected()) {
+			connect();
+		}
 		while (channel.write(buffer) == 0) {
 			if (selector.select(sendTimeout) == 0) {
 				throw new IOException("Send operation timed out");
@@ -66,10 +76,7 @@ public class GelfUDPSender implements GelfSender {
 		}
 	}
 
-	private synchronized void connect() throws IOException, GelfSenderException {
-		if (shutdown) {
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
-		}
+	private void connect() throws IOException {
 		destinationAddress = new InetSocketAddress(this.destinationHost, this.destinationPort);
 		if (selector == null || !selector.isOpen()) {
 			selector = Selector.open();
@@ -83,31 +90,24 @@ public class GelfUDPSender implements GelfSender {
 		channel.register(selector, SelectionKey.OP_WRITE);
 	}
 
-	public synchronized void close() {
-		if (!shutdown) {
-			shutdown = true;
-			closeConnection();
-		}
-	}
-
 	private void closeConnection() {
 		if (channel != null) {
 			try {
 				channel.close();
 			} catch (Exception ignoredException) {
 			}
+			channel = null;
 		}
 		if (selector != null) {
 			try {
 				selector.close();
 			} catch (Exception ignoredException) {
 			}
+			selector = null;
 		}
-		channel = null;
-		selector = null;
 	}
 
-	public boolean isConnected() {
+	private boolean isConnected() {
 		return channel != null && channel.isConnected();
 	}
 
@@ -184,7 +184,7 @@ public class GelfUDPSender implements GelfSender {
 
 		private byte[] createMessageId() {
 			byte[] messageId = new byte[8];
-			byte[] randomBytes = createHostId();
+			byte[] randomBytes = new byte[4];
 			random.nextBytes(randomBytes);
 			System.arraycopy(hostId, 0, messageId, 0, 4);
 			System.arraycopy(randomBytes, 0, messageId, 4, 4);

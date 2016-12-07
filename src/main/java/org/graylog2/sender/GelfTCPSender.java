@@ -31,10 +31,10 @@ public class GelfTCPSender implements GelfSender {
 		this.bufferManager = new TCPBufferManager();
 	}
 
-	public void sendMessage(GelfMessage message) throws GelfSenderException {
+	public synchronized void sendMessage(GelfMessage message) throws GelfSenderException {
 		try {
-			if (!isConnected()) {
-				connect();
+			if (shutdown) {
+				throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
 			}
 			send(bufferManager.toTCPBuffer(message.toJson()));
 		} catch (Exception exception) {
@@ -43,7 +43,17 @@ public class GelfTCPSender implements GelfSender {
 		}
 	}
 
+	public synchronized void close() {
+		if (!shutdown) {
+			shutdown = true;
+			closeConnection();
+		}
+	}
+
 	private void send(ByteBuffer buffer) throws IOException, InterruptedException {
+		if (!isConnected()) {
+			connect();
+		}
 		while (buffer.hasRemaining() && channel.write(buffer) == 0) {
 			if (selector.select(sendTimeout) == 0) {
 				throw new IOException("Send operation timed out");
@@ -51,10 +61,7 @@ public class GelfTCPSender implements GelfSender {
 		}
 	}
 
-	private synchronized void connect() throws IOException, GelfSenderException {
-		if (shutdown) {
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
-		}
+	private void connect() throws IOException {
 		selector = Selector.open();
 		channel = SocketChannel.open();
 		channel.configureBlocking(false);
@@ -73,14 +80,7 @@ public class GelfTCPSender implements GelfSender {
 	}
 
 	private boolean isConnected() {
-		return channel != null;
-	}
-
-	public synchronized void close() {
-		if (!shutdown) {
-			shutdown = true;
-			closeConnection();
-		}
+		return channel != null && channel.isConnected();
 	}
 
 	private void closeConnection() {

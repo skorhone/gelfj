@@ -34,7 +34,10 @@ public class GelfAMQPSender implements GelfSender {
 		this.bufferManager = new AMQPBufferManager();
 	}
 
-	public void sendMessage(GelfMessage message) throws GelfSenderException {
+	public synchronized void sendMessage(GelfMessage message) throws GelfSenderException {
+		if (shutdown) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+		}
 		String uuid = UUID.randomUUID().toString();
 		String messageid = "gelf-" + message.getHost() + "-" + message.getTimestamp() + "-" + uuid;
 
@@ -42,18 +45,7 @@ public class GelfAMQPSender implements GelfSender {
 		Exception lastException = null;
 		do {
 			try {
-				if (!isConnected()) {
-					connect();
-				}
-				BasicProperties.Builder propertiesBuilder = new BasicProperties.Builder();
-				propertiesBuilder.contentType("application/json; charset=utf-8");
-				propertiesBuilder.contentEncoding("gzip");
-				propertiesBuilder.messageId(messageid);
-				propertiesBuilder.timestamp(new Date(message.getJavaTimestamp()));
-				BasicProperties properties = propertiesBuilder.build();
-				channel.basicPublish(exchangeName, routingKey, properties,
-						bufferManager.toAMQPBuffer(message.toJson()));
-				channel.waitForConfirms();
+				send(messageid, message);
 				return;
 			} catch (Exception exception) {
 				closeConnection();
@@ -65,10 +57,22 @@ public class GelfAMQPSender implements GelfSender {
 		throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
 	}
 
-	private synchronized void connect() throws IOException, GelfSenderException {
-		if (shutdown) {
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+	private void send(String messageid, GelfMessage message) throws IOException, InterruptedException {
+		if (!isConnected()) {
+			connect();
 		}
+		BasicProperties.Builder propertiesBuilder = new BasicProperties.Builder();
+		propertiesBuilder.contentType("application/json; charset=utf-8");
+		propertiesBuilder.contentEncoding("gzip");
+		propertiesBuilder.messageId(messageid);
+		propertiesBuilder.timestamp(new Date(message.getJavaTimestamp()));
+		BasicProperties properties = propertiesBuilder.build();
+		channel.basicPublish(exchangeName, routingKey, properties,
+				bufferManager.toAMQPBuffer(message.toJson()));
+		channel.waitForConfirms();
+	}
+
+	private void connect() throws IOException {
 		connection = factory.newConnection();
 		channel = connection.createChannel();
 		channel.confirmSelect();

@@ -16,6 +16,9 @@ public class Fields {
 	}
 
 	public static Map<String, ? extends Object> getFields(Object provider) {
+		if (provider == null) {
+			return null;
+		}
 		Class<?> providerType = provider.getClass();
 		Accessor accessor;
 		LOCK.readLock().lock();

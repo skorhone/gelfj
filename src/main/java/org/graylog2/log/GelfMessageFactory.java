@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
+import org.apache.log4j.MDC;
 import org.apache.log4j.spi.LocationInfo;
 import org.apache.log4j.spi.LoggingEvent;
 import org.graylog2.message.GelfMessage;
@@ -16,15 +17,13 @@ public class GelfMessageFactory {
 	private static final String LOGGER_NDC = "loggerNdc";
 
 	static {
-		Method[] declaredMethods = LoggingEvent.class.getDeclaredMethods();
-		for (Method m : declaredMethods) {
-			if (m.getName().equals("getTimeStamp")) {
-				methodGetTimeStamp = m;
-				break;
-			}
+		try {
+			methodGetTimeStamp = LoggingEvent.class.getDeclaredMethod("getTimeStamp");
+		} catch (Exception ignoredException) {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public GelfMessage makeMessage(Layout layout, LoggingEvent event, GelfMessageProvider provider)
 			throws GelfMessageBuilderException {
 		long timeStamp = getTimeStamp(event);
@@ -49,6 +48,7 @@ public class GelfMessageFactory {
 			builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, event.getThreadName());
 			builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, level.toString());
 			builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, event.getLoggerName());
+			builder.addFields(MDC.getContext());
 			String ndc = event.getNDC();
 			if (ndc != null) {
 				builder.addField(LOGGER_NDC, event.getNDC());
