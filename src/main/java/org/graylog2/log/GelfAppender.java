@@ -26,7 +26,7 @@ import org.graylog2.util.Fields;
  * @author Jochen Schalanda
  */
 public class GelfAppender extends AppenderSkeleton {
-	private static Method methodGetTimeStamp = null;
+	private static final Method methodGetTimeStamp;
 	private static final String LOGGER_NDC = "loggerNdc";
 	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
@@ -36,10 +36,12 @@ public class GelfAppender extends AppenderSkeleton {
 	private boolean includeLocation;
 
 	static {
+		Method method = null;
 		try {
-			methodGetTimeStamp = LoggingEvent.class.getDeclaredMethod("getTimeStamp");
+			method = LoggingEvent.class.getDeclaredMethod("getTimeStamp");
 		} catch (Exception ignoredException) {
 		}
+		methodGetTimeStamp = method;
 	}
 
 	public GelfAppender() {

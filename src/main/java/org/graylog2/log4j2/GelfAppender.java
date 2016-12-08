@@ -27,7 +27,7 @@ public class GelfAppender extends AbstractAppender {
 	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration gelfSenderConfiguration;
 	private GelfSender gelfSender;
-	
+
 	public GelfAppender(String name, Filter filter, Layout<? extends Serializable> layout,
 			GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration,
 			GelfSenderConfiguration gelfSenderConfiguration) {
@@ -43,7 +43,7 @@ public class GelfAppender extends AbstractAppender {
 		}
 		super.start();
 	}
-	
+
 	@Override
 	public boolean stop(long timeout, TimeUnit timeUnit) {
 		close();
@@ -89,18 +89,18 @@ public class GelfAppender extends AbstractAppender {
 			getHandler().error("Could not send gelf message", exception);
 		}
 	}
-	
+
 	@PluginBuilderFactory
-	public static GelfAppenderBuilder createAppender() {
-		return new GelfAppenderBuilder();
+	public static Builder createAppender() {
+		return new Builder();
 	}
-	
-	public static class GelfAppenderBuilder implements org.apache.logging.log4j.core.util.Builder<GelfAppender> {
+
+	public static class Builder implements org.apache.logging.log4j.core.util.Builder<GelfAppender> {
 		@PluginBuilderAttribute
-        @Required(message = "A name for the GelfAppender must be specified")
-        private String name;
+		@Required(message = "A name for the GelfAppender must be specified")
+		private String name;
 		@PluginBuilderAttribute
-        @Required(message = "A targetURI for the GelfAppender must be specified")
+		@Required(message = "A targetURI for the GelfAppender must be specified")
 		private String targetURI;
 		@PluginBuilderAttribute
 		private boolean threaded;
@@ -117,68 +117,68 @@ public class GelfAppender extends AbstractAppender {
 		@PluginBuilderAttribute
 		private String facility;
 		@PluginElement("Layout")
-        private Layout<? extends Serializable> layout;
-        @PluginElement("Filter")
-        private Filter filter;
-        
-        public GelfAppenderBuilder() {
-        	this.threaded = false;
-        	this.threadedQueueTimeout = GelfSenderConfiguration.DEFAULT_THREADED_QUEUE_TIMEOUT;
-        	this.threadedQueueMaxDepth = GelfSenderConfiguration.DEFAULT_THREADED_QUEUE_MAX_DEPTH;
-        	this.layout = SerializedLayout.createLayout();
+		private Layout<? extends Serializable> layout;
+		@PluginElement("Filter")
+		private Filter filter;
+
+		public Builder() {
+			this.threaded = false;
+			this.threadedQueueTimeout = GelfSenderConfiguration.DEFAULT_THREADED_QUEUE_TIMEOUT;
+			this.threadedQueueMaxDepth = GelfSenderConfiguration.DEFAULT_THREADED_QUEUE_MAX_DEPTH;
+			this.layout = SerializedLayout.createLayout();
 		}
-        
-        public GelfAppenderBuilder setName(String name) {
+
+		public Builder setName(String name) {
 			this.name = name;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setTargetURI(String targetURI) {
+
+		public Builder setTargetURI(String targetURI) {
 			this.targetURI = targetURI;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setThreaded(boolean threaded) {
+
+		public Builder setThreaded(boolean threaded) {
 			this.threaded = threaded;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setThreadedQueueTimeout(int threadedQueueTimeout) {
+
+		public Builder setThreadedQueueTimeout(int threadedQueueTimeout) {
 			this.threadedQueueTimeout = threadedQueueTimeout;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setThreadedQueueMaxDepth(int threadedQueueMaxDepth) {
+
+		public Builder setThreadedQueueMaxDepth(int threadedQueueMaxDepth) {
 			this.threadedQueueMaxDepth = threadedQueueMaxDepth;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setMaxRetries(int maxRetries) {
+
+		public Builder setMaxRetries(int maxRetries) {
 			this.maxRetries = maxRetries;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setExtractStacktrace(boolean extractStactkrace) {
+
+		public Builder setExtractStacktrace(boolean extractStactkrace) {
 			this.extractStacktrace = extractStactkrace;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setOriginHost(String originHost) {
+
+		public Builder setOriginHost(String originHost) {
 			this.originHost = originHost;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setFacility(String facility) {
+
+		public Builder setFacility(String facility) {
 			this.facility = facility;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setFilter(Filter filter) {
+
+		public Builder setFilter(Filter filter) {
 			this.filter = filter;
 			return this;
 		}
-        
-        public GelfAppenderBuilder setLayout(Layout<? extends Serializable> layout) {
+
+		public Builder setLayout(Layout<? extends Serializable> layout) {
 			this.layout = layout;
 			return this;
 		}
@@ -188,14 +188,14 @@ public class GelfAppender extends AbstractAppender {
 			gelfMessageBuilderConfiguration.setExtractStacktrace(extractStacktrace);
 			gelfMessageBuilderConfiguration.setFacility(facility);
 			gelfMessageBuilderConfiguration.setOriginHost(originHost);
-			
+
 			GelfSenderConfiguration gelfSenderConfiguration = new GelfSenderConfiguration();
 			gelfSenderConfiguration.setTargetURI(targetURI);
 			gelfSenderConfiguration.setThreaded(threaded);
 			gelfSenderConfiguration.setThreadedQueueMaxDepth(threadedQueueMaxDepth);
 			gelfSenderConfiguration.setThreadedQueueTimeout(threadedQueueTimeout);
 			gelfSenderConfiguration.setMaxRetries(maxRetries);
-			
+
 			return new GelfAppender(name, filter, layout, gelfMessageBuilderConfiguration, gelfSenderConfiguration);
 		}
 	}
