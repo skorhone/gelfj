@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.graylog2.json.JSON;
 
@@ -40,8 +41,9 @@ public class GelfMessage {
 			message.put("line", getLine());
 		}
 		message.put("level", getLevel());
-		message.putAll(getAdditionalFields());
-		
+		for (Entry<String, Object> entry : getAdditionalFields().entrySet()) {
+			message.put("_" + entry.getKey(), entry.getValue());
+		}
 		return JSON.encode(message, new StringBuilder()).toString();
 	}
 
@@ -134,7 +136,7 @@ public class GelfMessage {
 		if (additionalFields == null) {
 			additionalFields = new HashMap<String, Object>();
 		}
-		additionalFields.put("_" + key, value);
+		additionalFields.put(key, value);
 	}
 
 	public Map<String, Object> getAdditionalFields() {

@@ -33,9 +33,7 @@ public class GelfAppenderTest {
 	@Before
 	public void setUp() throws IOException {
 		gelfSender = new TestGelfSender();
-
 		gelfAppender = new GelfAppender() {
-
 			@Override
 			public GelfSender getGelfSender() {
 				return gelfSender;
@@ -57,7 +55,6 @@ public class GelfAppenderTest {
 
 	@Test
 	public void ensureHostnameForMessage() {
-
 		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(GelfAppenderTest.class), 123L,
 				Level.INFO, "Das Auto", new RuntimeException("Volkswagen"));
 		gelfAppender.append(event);
