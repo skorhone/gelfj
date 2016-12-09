@@ -8,30 +8,34 @@ import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
+import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
 import org.apache.logging.log4j.core.layout.SerializedLayout;
 import org.apache.logging.log4j.core.net.Severity;
+import org.graylog2.field.FieldExtractor;
+import org.graylog2.field.FieldExtractors;
 import org.graylog2.message.GelfMessageBuilder;
 import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderFactory;
-import org.graylog2.util.Fields;
 
 @Plugin(name = "Gelf", category = "Core", elementType = "appender", printObject = true)
 public class GelfAppender extends AbstractAppender {
 	private static final String LOGGER_NDC = "loggerNdc";
 	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration gelfSenderConfiguration;
+	private FieldExtractor fieldExtractor;
 	private GelfSender gelfSender;
 
 	public GelfAppender(String name, Filter filter, Layout<? extends Serializable> layout,
-			GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration,
+			FieldExtractor fieldExtractor, GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration,
 			GelfSenderConfiguration gelfSenderConfiguration) {
 		super(name, filter, layout);
+		this.fieldExtractor = fieldExtractor;
 		this.gelfMessageBuilderConfiguration = gelfMessageBuilderConfiguration;
 		this.gelfSenderConfiguration = gelfSenderConfiguration;
 	}
@@ -79,7 +83,9 @@ public class GelfAppender extends AbstractAppender {
 			builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, source.getClassName());
 			builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, source.getMethodName());
 		}
-		builder.addFields(Fields.getFields(event.getMessage()));
+		if (fieldExtractor != null) {
+			builder.addFields(fieldExtractor.getFields(event.getMessage()));
+		}
 		if (ndc != null) {
 			builder.addField(LOGGER_NDC, ndc);
 		}
@@ -116,6 +122,8 @@ public class GelfAppender extends AbstractAppender {
 		private String originHost;
 		@PluginBuilderAttribute
 		private String facility;
+		@PluginBuilderAttribute
+		private String fieldExtractor;
 		@PluginElement("Layout")
 		private Layout<? extends Serializable> layout;
 		@PluginElement("Filter")
@@ -173,6 +181,11 @@ public class GelfAppender extends AbstractAppender {
 			return this;
 		}
 
+		public Builder setFieldExtractor(String fieldExtractor) {
+			this.fieldExtractor = fieldExtractor;
+			return this;
+		}
+
 		public Builder setFilter(Filter filter) {
 			this.filter = filter;
 			return this;
@@ -196,7 +209,11 @@ public class GelfAppender extends AbstractAppender {
 			gelfSenderConfiguration.setThreadedQueueTimeout(threadedQueueTimeout);
 			gelfSenderConfiguration.setMaxRetries(maxRetries);
 
-			return new GelfAppender(name, filter, layout, gelfMessageBuilderConfiguration, gelfSenderConfiguration);
+			FieldExtractor fieldExt = fieldExtractor != null ? FieldExtractors.getInstance(fieldExtractor)
+					: FieldExtractors.getDefaultInstance();
+
+			return new GelfAppender(name, filter, layout, fieldExt, gelfMessageBuilderConfiguration,
+					gelfSenderConfiguration);
 		}
 	}
 }

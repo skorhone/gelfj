@@ -8,6 +8,8 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
+import org.graylog2.field.FieldExtractor;
+import org.graylog2.field.FieldExtractors;
 import org.graylog2.message.GelfMessage;
 import org.graylog2.message.GelfMessageBuilder;
 import org.graylog2.message.GelfMessageBuilderConfiguration;
@@ -17,11 +19,11 @@ import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderConfigurationException;
 import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
-import org.graylog2.util.Fields;
 
 public class GelfHandler extends Handler {
 	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
+	private FieldExtractor fieldExtractor;
 	private GelfSender gelfSender;
 	private boolean closed;
 
@@ -53,6 +55,9 @@ public class GelfHandler extends Handler {
 			}
 		} catch (Exception ignoredException) {
 		}
+		String fieldExtractorType = properties.getProperty("fieldExtractor");
+		fieldExtractor = fieldExtractorType != null ? FieldExtractors.getInstance(fieldExtractorType)
+				: FieldExtractors.getDefaultInstance();
 	}
 
 	@Override
@@ -104,10 +109,11 @@ public class GelfHandler extends Handler {
 		if (record instanceof GelfLogRecord) {
 			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
 			fields = gelfLogRecord.getFields();
+		} else if (fieldExtractor != null) {
+			fields = fieldExtractor.getFields(record);
 		} else {
-			fields = Fields.getFields(record);
+			fields = null;
 		}
-
 		builder.setMessage(message);
 		builder.setThrowable(record.getThrown());
 		builder.setLevel(String.valueOf(levelToSyslogLevel(record.getLevel())));

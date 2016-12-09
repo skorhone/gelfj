@@ -9,6 +9,8 @@ import org.apache.log4j.MDC;
 import org.apache.log4j.spi.ErrorCode;
 import org.apache.log4j.spi.LocationInfo;
 import org.apache.log4j.spi.LoggingEvent;
+import org.graylog2.field.FieldExtractor;
+import org.graylog2.field.FieldExtractors;
 import org.graylog2.message.GelfMessage;
 import org.graylog2.message.GelfMessageBuilder;
 import org.graylog2.message.GelfMessageBuilderConfiguration;
@@ -18,7 +20,6 @@ import org.graylog2.sender.GelfSenderConfiguration;
 import org.graylog2.sender.GelfSenderConfigurationException;
 import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
-import org.graylog2.util.Fields;
 
 /**
  *
@@ -26,10 +27,11 @@ import org.graylog2.util.Fields;
  * @author Jochen Schalanda
  */
 public class GelfAppender extends AppenderSkeleton {
-	private static final Method methodGetTimeStamp;
 	private static final String LOGGER_NDC = "loggerNdc";
+	private static final Method getTimeStamp;
 	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
+	private FieldExtractor fieldExtractor;
 	private GelfSender gelfSender;
 	private boolean extractStacktrace;
 	private boolean addExtendedInformation;
@@ -41,13 +43,14 @@ public class GelfAppender extends AppenderSkeleton {
 			method = LoggingEvent.class.getDeclaredMethod("getTimeStamp");
 		} catch (Exception ignoredException) {
 		}
-		methodGetTimeStamp = method;
+		getTimeStamp = method;
 	}
 
 	public GelfAppender() {
 		this.gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
 		this.senderConfiguration = new GelfSenderConfiguration();
 		this.includeLocation = true;
+		this.fieldExtractor = FieldExtractors.getDefaultInstance();
 	}
 
 	public String getTargetURI() {
@@ -56,6 +59,10 @@ public class GelfAppender extends AppenderSkeleton {
 
 	public void setTargetURI(String graylogHost) {
 		senderConfiguration.setTargetURI(graylogHost);
+	}
+
+	public void setFieldExtractor(String type) {
+		this.fieldExtractor = FieldExtractors.getInstance(type);
 	}
 
 	public boolean isThreaded() {
@@ -221,8 +228,9 @@ public class GelfAppender extends AppenderSkeleton {
 				builder.addField(LOGGER_NDC, event.getNDC());
 			}
 		}
-		builder.addFields(Fields.getFields(event.getMessage()));
-
+		if (fieldExtractor != null) {
+			builder.addFields(fieldExtractor.getFields(event.getMessage()));
+		}
 		return builder.build();
 	}
 
@@ -236,9 +244,9 @@ public class GelfAppender extends AppenderSkeleton {
 
 	private long getTimeStamp(LoggingEvent event) {
 		long timeStamp = 0;
-		if (methodGetTimeStamp != null) {
+		if (getTimeStamp != null) {
 			try {
-				timeStamp = (Long) methodGetTimeStamp.invoke(event);
+				timeStamp = (Long) getTimeStamp.invoke(event);
 			} catch (Exception ignoredException) {
 			}
 		}

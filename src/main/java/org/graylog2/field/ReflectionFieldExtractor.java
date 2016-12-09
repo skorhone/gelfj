@@ -1,4 +1,4 @@
-package org.graylog2.util;
+package org.graylog2.field;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -6,37 +6,37 @@ import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class Fields {
-	private static Map<Class<?>, Accessor> ACCESSORS;
-	private static ReadWriteLock LOCK;
+public class ReflectionFieldExtractor implements FieldExtractor {
+	private Map<Class<?>, Accessor> accessors;
+	private ReadWriteLock lock;
 
-	static {
-		ACCESSORS = new WeakHashMap<Class<?>, Accessor>();
-		LOCK = new ReentrantReadWriteLock();
+	public ReflectionFieldExtractor() {
+		accessors = new WeakHashMap<Class<?>, Accessor>();
+		lock = new ReentrantReadWriteLock();
 	}
 
-	public static Map<String, ? extends Object> getFields(Object provider) {
+	public Map<String, ? extends Object> getFields(Object provider) {
 		if (provider == null) {
 			return null;
 		}
 		Class<?> providerType = provider.getClass();
 		Accessor accessor;
-		LOCK.readLock().lock();
+		lock.readLock().lock();
 		try {
-			accessor = ACCESSORS.get(providerType);
+			accessor = accessors.get(providerType);
 		} finally {
-			LOCK.readLock().unlock();
+			lock.readLock().unlock();
 		}
 		if (accessor == null) {
-			LOCK.writeLock().lock();
+			lock.writeLock().lock();
 			try {
-				accessor = ACCESSORS.get(providerType);
+				accessor = accessors.get(providerType);
 				if (accessor == null) {
 					accessor = new Accessor(providerType);
-					ACCESSORS.put(providerType, accessor);
+					accessors.put(providerType, accessor);
 				}
 			} finally {
-				LOCK.writeLock().unlock();
+				lock.writeLock().unlock();
 			}
 		}
 		return accessor.getFields(provider);
