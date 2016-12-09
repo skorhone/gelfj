@@ -1,14 +1,67 @@
 package org.graylog2.json;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
+
 public class JSON {
-	public static String encodeQuoted(String string) {
+	@SuppressWarnings("unchecked")
+	public static StringBuilder encode(Object object, StringBuilder sb) {
+		if (object == null) {
+			return encode(null, sb);
+		}
+		Class<?> type = object.getClass();
+		if (Map.class.isAssignableFrom(type)) {
+			return encodeMap((Map<? extends Object, ? extends Object>)object, sb);
+		}
+		if (type.isArray()) {
+			return encodeCollection(Arrays.asList((Object[])object), sb);
+		}
+		if (Collection.class.isAssignableFrom(type)) {
+			return encodeCollection((Collection<? extends Object>)object, sb);
+		}
+		if (Number.class.isAssignableFrom(type)) {
+			return sb.append(object.toString());
+		}
+		return encode(object.toString(), sb);
+	}
+	
+	public static StringBuilder encodeCollection(Collection<? extends Object> collection, StringBuilder sb) {
+		sb.append('[');
+		boolean first = true;
+		for (Object object : collection) {
+			if (!first) {
+				sb.append(", ");
+			}
+			encode(object, sb);
+			first = false;
+		}
+		return sb.append(']');
+	}
+	
+	public static StringBuilder encodeMap(Map<? extends Object, ? extends Object> map, StringBuilder sb) {
+		sb.append('{');
+		boolean first = true;
+		for (Entry<? extends Object, ? extends Object> entry : map.entrySet()) {
+			if (!first) {
+				sb.append(", ");
+			}
+			encode(entry.getKey().toString(), sb);
+			sb.append(": ");
+			encode(entry.getValue(), sb);
+			first = false;
+		}
+		return sb.append('}');
+	}
+	
+	public static StringBuilder encode(String string, StringBuilder sb) {
 		if (string == null) {
-			return "null";
+			return sb.append("null");
 		}
 		if (string.length() == 0) {
-			return "\"\"";
+			return sb.append("\"\"");
 		}
-		StringBuilder sb = new StringBuilder(string.length() + 4);
 
 		sb.append('"');
 		for (int i = 0; i < string.length(); i += 1) {
@@ -42,6 +95,6 @@ public class JSON {
 			}
 		}
 		sb.append('"');
-		return sb.toString();
+		return sb;
 	}
 }

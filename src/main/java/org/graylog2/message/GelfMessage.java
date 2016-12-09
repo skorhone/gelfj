@@ -3,12 +3,12 @@ package org.graylog2.message;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.graylog2.json.JSON;
 
 public class GelfMessage {
-	private static final String C_NL = ",\r\n";
 	private static final String ID_NAME = "id";
 	private static final String GELF_VERSION = "1.1";
 	private static final BigDecimal TIME_DIVISOR = new BigDecimal(1000);
@@ -27,45 +27,22 @@ public class GelfMessage {
 	}
 
 	public String toJson() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("{\r\n");
-		sb.append("\t\"version\": ").append(JSON.encodeQuoted(getVersion())).append(C_NL);
-		sb.append("\t\"host\": ").append(JSON.encodeQuoted(getHost())).append(C_NL);
-		sb.append("\t\"short_message\": ").append(JSON.encodeQuoted(getShortMessage())).append(C_NL);
-		sb.append("\t\"full_message\": ").append(JSON.encodeQuoted(getFullMessage())).append(C_NL);
-		sb.append("\t\"timestamp\": ").append(getTimestamp()).append(C_NL);
+		Map<String, Object> message = new LinkedHashMap<String, Object>(100);
+		message.put("version", getVersion());
+		message.put("host", getHost());
+		message.put("short_message", getShortMessage());
+		message.put("full_message", getFullMessage());
+		message.put("timestamp", getTimestamp());
 		if (getFile() != null) {
-			sb.append("\t\"file\": ").append(JSON.encodeQuoted(getFile())).append(C_NL);
+			message.put("file", getFile());
 		}
-		Long line = getLine();
-		if (line != null) {
-			sb.append("\t\"line\": ").append(line).append(C_NL);
+		if (getLine() != null) {
+			message.put("line", getLine());
 		}
-		sb.append("\t\"level\": ").append(getLevel());
-
-		for (Map.Entry<String, Object> additionalField : getAdditionalFields().entrySet()) {
-			if (!ID_NAME.equals(additionalField.getKey())) {
-				String key = JSON.encodeQuoted("_" + additionalField.getKey());
-				Object objectValue = additionalField.getValue();
-				String value;
-				if (objectValue != null) {
-					if (objectValue instanceof Number) {
-						value = objectValue.toString();
-					} else if (objectValue instanceof Boolean) {
-						value = objectValue.toString();
-					} else {
-						value = JSON.encodeQuoted(additionalField.getValue().toString());
-					}
-					sb.append(",\r\n\t").append(key).append(": ").append(value);
-				}
-			}
-		}
-		sb.append("\r\n}\r\n");
-		return sb.toString();
-	}
-
-	public int getCurrentMillis() {
-		return (int) System.currentTimeMillis();
+		message.put("level", getLevel());
+		message.putAll(getAdditionalFields());
+		
+		return JSON.encode(message, new StringBuilder()).toString();
 	}
 
 	public String getVersion() {
@@ -151,10 +128,13 @@ public class GelfMessage {
 	}
 
 	public void addField(String key, Object value) {
+		if (key.equals(ID_NAME)) {
+			throw new IllegalArgumentException("Field name is not allowed!");
+		}
 		if (additionalFields == null) {
 			additionalFields = new HashMap<String, Object>();
 		}
-		additionalFields.put(key, value);
+		additionalFields.put("_" + key, value);
 	}
 
 	public Map<String, Object> getAdditionalFields() {
