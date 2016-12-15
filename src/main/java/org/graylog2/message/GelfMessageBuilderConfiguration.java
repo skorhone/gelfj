@@ -32,7 +32,7 @@ public class GelfMessageBuilderConfiguration {
 	public void setOriginHost(String originHost) {
 		this.originHost = originHost;
 	}
-	
+
 	public boolean isExtractStacktrace() {
 		return extractStacktrace;
 	}

@@ -4,17 +4,15 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.graylog2.message.GelfMessage;
-
 public class GelfThreadedSender implements GelfSender {
 	enum Status {
 		ACTIVE, CLOSE_WAITING, CLOSE_FORCED, CLOSED
 	}
 
-	private static final GelfMessage CLOSE_MESSAGE = new GelfMessage();
+	private static final String CLOSE_MESSAGE = "!!CLOSE!!";
 	private static final int SHUTDOWN_TIMEOUT = 10000;
 	private final GelfSender sender;
-	private final BlockingQueue<GelfMessage> messageQueue;
+	private final BlockingQueue<String> messageQueue;
 	private final int timeout;
 	private final int maxRetries;
 	private Thread thread;
@@ -25,10 +23,10 @@ public class GelfThreadedSender implements GelfSender {
 		this.sender = sender;
 		this.timeout = configuration.getThreadedQueueTimeout();
 		this.maxRetries = configuration.getMaxRetries();
-		this.messageQueue = new ArrayBlockingQueue<GelfMessage>(configuration.getThreadedQueueMaxDepth(), true);
+		this.messageQueue = new ArrayBlockingQueue<String>(configuration.getThreadedQueueMaxDepth(), true);
 	}
 
-	public void sendMessage(GelfMessage message) throws GelfSenderException {
+	public void sendMessage(String message) throws GelfSenderException {
 		if (isClosed()) {
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
 		}
@@ -83,7 +81,7 @@ public class GelfThreadedSender implements GelfSender {
 	}
 
 	public class GelfSenderThread implements Runnable {
-		private GelfMessage currentMessage;
+		private String currentMessage;
 
 		public void run() {
 			int retryCount = 0;

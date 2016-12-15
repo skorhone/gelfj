@@ -1,5 +1,7 @@
 package org.graylog2.logging;
 
+import org.graylog2.field.FieldExtractor;
+import org.graylog2.field.FieldExtractors;
 import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.sender.GelfSenderConfiguration;
 
@@ -44,6 +46,20 @@ public class JULConfigurationManager {
 			configuration.setMaxRetries(Integer.valueOf(maxRetries));
 		}
 		return configuration;
+	}
+
+	public static GelfFormatterConfiguration getGelfFormatterConfiguration(JULProperties properties) {
+		GelfFormatterConfiguration gelfFormatterConfiguration = new GelfFormatterConfiguration();
+
+		String fieldExtractorType = properties.getProperty("fieldExtractor");
+		FieldExtractor fieldExtractor = fieldExtractorType != null ? FieldExtractors.getInstance(fieldExtractorType)
+				: FieldExtractors.getDefaultInstance();
+
+		gelfFormatterConfiguration
+				.setIncludeLocation(!"false".equalsIgnoreCase(properties.getProperty("includeLocation")));
+		gelfFormatterConfiguration.setFieldExtractor(fieldExtractor);
+
+		return gelfFormatterConfiguration;
 	}
 
 	private static String getURI(JULProperties properties) {

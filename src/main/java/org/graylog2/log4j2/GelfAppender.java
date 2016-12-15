@@ -8,7 +8,6 @@ import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
-import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
@@ -78,10 +77,12 @@ public class GelfAppender extends AbstractAppender {
 		builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, event.getLevel().name());
 		builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, event.getLoggerName());
 		String ndc = event.getContextStack().peek();
-		StackTraceElement source = event.getSource();
-		if (source != null) {
-			builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, source.getClassName());
-			builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, source.getMethodName());
+		if (event.isIncludeLocation()) {
+			StackTraceElement source = event.getSource();
+			if (source != null) {
+				builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, source.getClassName());
+				builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, source.getMethodName());
+			}
 		}
 		if (fieldExtractor != null) {
 			builder.addFields(fieldExtractor.getFields(event.getMessage()));
@@ -90,7 +91,7 @@ public class GelfAppender extends AbstractAppender {
 			builder.addField(LOGGER_NDC, ndc);
 		}
 		try {
-			gelfSender.sendMessage(builder.build());
+			gelfSender.sendMessage(builder.build().toJson());
 		} catch (Exception exception) {
 			getHandler().error("Could not send gelf message", exception);
 		}

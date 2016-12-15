@@ -1,10 +1,6 @@
 package org.graylog2.log;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -15,7 +11,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.MDC;
 import org.apache.log4j.NDC;
 import org.apache.log4j.spi.LoggingEvent;
-import org.graylog2.message.GelfMessage;
 import org.graylog2.sender.GelfSender;
 import org.junit.After;
 import org.junit.Before;
@@ -57,117 +52,74 @@ public class GelfAppenderTest {
 	public void ensureHostnameForMessage() {
 		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(GelfAppenderTest.class), 123L,
 				Level.INFO, "Das Auto", new RuntimeException("Volkswagen"));
-		gelfAppender.append(event);
-
-		assertThat("Message hostname", gelfSender.getLastMessage().getHost(), notNullValue());
-
 		gelfAppender.setOriginHost("example.com");
 		gelfAppender.append(event);
-		assertThat(gelfSender.getLastMessage().getHost(), is("example.com"));
+		assertTrue(gelfSender.getLastMessage().contains("example.com"));
 	}
 
 	@Test
 	public void handleNullInAppend() {
-
 		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, null,
 				new RuntimeException("LOL"));
 		gelfAppender.append(event);
 
-		assertThat("Message short message", gelfSender.getLastMessage().getShortMessage(), notNullValue());
-		assertThat("Message full message", gelfSender.getLastMessage().getFullMessage(), notNullValue());
+		assertTrue(gelfSender.getLastMessage().contains("short_message"));
+		assertTrue(gelfSender.getLastMessage().contains("full_message"));
 	}
 
 	@Test
 	public void handleMDC() {
-
 		gelfAppender.setAddExtendedInformation(true);
-
 		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, "",
 				new RuntimeException("LOL"));
 		MDC.put("foo", "bar");
-
 		gelfAppender.append(event);
 
-		assertEquals("bar", gelfSender.getLastMessage().getAdditionalFields().get("foo"));
-		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("non-existent"));
-	}
-
-	@Test
-	public void handleMDCTransform() {
-
-		gelfAppender.setAddExtendedInformation(true);
-
-		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, "",
-				new RuntimeException("LOL"));
-		MDC.put("foo", 200);
-
-		gelfAppender.append(event);
-
-		assertEquals(200, gelfSender.getLastMessage().getAdditionalFields().get("foo"));
-		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("non-existent"));
-
-		event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, "",
-				new RuntimeException("LOL"));
-		gelfAppender.append(event);
-
-		assertEquals(new Integer(200), gelfSender.getLastMessage().getAdditionalFields().get("foo"));
-		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("non-existent"));
+		assertTrue(gelfSender.getLastMessage().contains("foo"));
 	}
 
 	@Test
 	public void handleNDC() {
 		gelfAppender.setAddExtendedInformation(true);
-
 		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, "",
 				new RuntimeException("LOL"));
 		NDC.push("Foobar");
-
 		gelfAppender.append(event);
-
-		assertEquals("Foobar", gelfSender.getLastMessage().getAdditionalFields().get("loggerNdc"));
+		assertTrue(gelfSender.getLastMessage().contains("Foobar"));
 	}
 
 	@Test
 	public void disableExtendedInformation() {
-
 		gelfAppender.setAddExtendedInformation(false);
-
 		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(this.getClass()), 123L, Level.INFO, "",
 				new RuntimeException("LOL"));
-
 		MDC.put("foo", "bar");
 		NDC.push("Foobar");
-
 		gelfAppender.append(event);
-
-		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("loggerNdc"));
-		assertNull(gelfSender.getLastMessage().getAdditionalFields().get("foo"));
+		assertTrue(!gelfSender.getLastMessage().contains("bar"));
+		assertTrue(!gelfSender.getLastMessage().contains("Foobar"));
 	}
 
 	@Test
 	public void checkExtendedInformation() throws UnknownHostException, SocketException {
-
 		gelfAppender.setAddExtendedInformation(true);
-
 		LoggingEvent event = new LoggingEvent(CLASS_NAME, Category.getInstance(GelfAppenderTest.class), 123L,
 				Level.INFO, "Das Auto", new RuntimeException("LOL"));
-
 		gelfAppender.append(event);
-
-		assertEquals(CLASS_NAME, gelfSender.getLastMessage().getAdditionalFields().get("loggerName"));
+		assertTrue(gelfSender.getLastMessage().contains(CLASS_NAME));
 	}
 
 	private class TestGelfSender implements GelfSender {
-		private GelfMessage lastMessage;
+		private String lastMessage;
 
-		public void sendMessage(GelfMessage message) {
+		public void sendMessage(String message) {
 			this.lastMessage = message;
 		}
 
 		public void close() {
 		}
 
-		public GelfMessage getLastMessage() {
+		public String getLastMessage() {
 			return lastMessage;
 		}
 	}

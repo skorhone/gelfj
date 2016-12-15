@@ -66,7 +66,7 @@ public class GelfMessageBuilder {
 		gelfMessage.setJavaTimestamp(timestamp);
 		gelfMessage.setHost(configuration.getOriginHost());
 		gelfMessage.setShortMessage(message);
-		if (throwable != null || message.length() > 1000) {
+		if (throwable != null) {
 			gelfMessage.setFullMessage(format(message, throwable, configuration.isExtractStacktrace()));
 		}
 		gelfMessage.setLevel(level);

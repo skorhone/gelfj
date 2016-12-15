@@ -4,10 +4,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
 import java.util.UUID;
-
-import org.graylog2.message.GelfMessage;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -34,12 +31,12 @@ public class GelfAMQPSender implements GelfSender {
 		this.bufferManager = new AMQPBufferManager();
 	}
 
-	public synchronized void sendMessage(GelfMessage message) throws GelfSenderException {
+	public synchronized void sendMessage(String message) throws GelfSenderException {
 		if (shutdown) {
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
 		}
 		String uuid = UUID.randomUUID().toString();
-		String messageid = "gelf-" + message.getHost() + "-" + message.getTimestamp() + "-" + uuid;
+		String messageid = "gelf-" + uuid;
 
 		int tries = 0;
 		Exception lastException = null;
@@ -57,7 +54,7 @@ public class GelfAMQPSender implements GelfSender {
 		throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
 	}
 
-	private void send(String messageid, GelfMessage message) throws IOException, InterruptedException {
+	private void send(String messageid, String message) throws IOException, InterruptedException {
 		if (!isConnected()) {
 			connect();
 		}
@@ -65,10 +62,9 @@ public class GelfAMQPSender implements GelfSender {
 		propertiesBuilder.contentType("application/json; charset=utf-8");
 		propertiesBuilder.contentEncoding("gzip");
 		propertiesBuilder.messageId(messageid);
-		propertiesBuilder.timestamp(new Date(message.getJavaTimestamp()));
 		BasicProperties properties = propertiesBuilder.build();
 		channel.basicPublish(exchangeName, routingKey, properties,
-				bufferManager.toAMQPBuffer(message.toJson()));
+				bufferManager.toAMQPBuffer(message));
 		channel.waitForConfirms();
 	}
 

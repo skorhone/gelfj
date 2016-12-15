@@ -174,7 +174,7 @@ public class GelfAppender extends AppenderSkeleton {
 		} else {
 			try {
 				GelfMessage gelfMessage = createMessage(event);
-				sender.sendMessage(gelfMessage);
+				sender.sendMessage(gelfMessage.toJson());
 			} catch (GelfMessageBuilderException exception) {
 				errorHandler.error("Error building GELF message", exception, ErrorCode.WRITE_FAILURE);
 			} catch (GelfSenderException exception) {
@@ -207,8 +207,10 @@ public class GelfAppender extends AppenderSkeleton {
 
 		if (isIncludeLocation()) {
 			LocationInfo locationInformation = event.getLocationInformation();
-			builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, locationInformation.getClassName());
-			builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, locationInformation.getMethodName());
+			if (locationInformation != null) {
+				builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, locationInformation.getClassName());
+				builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, locationInformation.getMethodName());
+			}
 		}
 
 		builder.setLevel(String.valueOf(level.getSyslogEquivalent()));

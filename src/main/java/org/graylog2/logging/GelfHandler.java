@@ -1,6 +1,5 @@
 package org.graylog2.logging;
 
-import java.util.Map;
 import java.util.logging.ErrorManager;
 import java.util.logging.Filter;
 import java.util.logging.Handler;
@@ -8,10 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
-import org.graylog2.field.FieldExtractor;
-import org.graylog2.field.FieldExtractors;
-import org.graylog2.message.GelfMessage;
-import org.graylog2.message.GelfMessageBuilder;
 import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.message.GelfMessageBuilderException;
 import org.graylog2.sender.GelfSender;
@@ -21,9 +16,7 @@ import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
 
 public class GelfHandler extends Handler {
-	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
-	private FieldExtractor fieldExtractor;
 	private GelfSender gelfSender;
 	private boolean closed;
 
@@ -36,7 +29,8 @@ public class GelfHandler extends Handler {
 	}
 
 	private void configure(JULProperties properties) {
-		this.gelfMessageBuilderConfiguration = JULConfigurationManager.getGelfMessageBuilderConfiguration(properties);
+		GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration = JULConfigurationManager
+				.getGelfMessageBuilderConfiguration(properties);
 		this.senderConfiguration = JULConfigurationManager.getGelfSenderConfiguration(properties);
 
 		final String level = properties.getProperty("level");
@@ -46,7 +40,7 @@ public class GelfHandler extends Handler {
 			setLevel(Level.INFO);
 		}
 
-		setFormatter(new SimpleFormatter());
+		setFormatter(new GelfFormatter(JULConfigurationManager.getGelfFormatterConfiguration(properties), gelfMessageBuilderConfiguration));
 
 		final String filter = properties.getProperty("filter");
 		try {
@@ -55,9 +49,6 @@ public class GelfHandler extends Handler {
 			}
 		} catch (Exception ignoredException) {
 		}
-		String fieldExtractorType = properties.getProperty("fieldExtractor");
-		fieldExtractor = fieldExtractorType != null ? FieldExtractors.getInstance(fieldExtractorType)
-				: FieldExtractors.getDefaultInstance();
 	}
 
 	@Override
@@ -71,24 +62,29 @@ public class GelfHandler extends Handler {
 		}
 	}
 
-	private synchronized void send(LogRecord record) {
-		if (!closed) {
-			try {
-				if (null == gelfSender) {
-					gelfSender = GelfSenderFactory.getInstance().createSender(senderConfiguration);
-				}
-				gelfSender.sendMessage(makeMessage(record));
-			} catch (GelfSenderException exception) {
-				reportError("Error during sending GELF message. Error code: " + exception.getErrorCode() + ".",
-						exception.getCause(), ErrorManager.WRITE_FAILURE);
-			} catch (GelfSenderConfigurationException exception) {
-				reportError(exception.getMessage(), exception.getCauseException(), ErrorManager.WRITE_FAILURE);
-			} catch (GelfMessageBuilderException exception) {
-				reportError("Could not create GELF message", exception, ErrorManager.WRITE_FAILURE);
-			} catch (Exception exception) {
-				reportError("Could not send GELF message", exception, ErrorManager.WRITE_FAILURE);
+	private void send(LogRecord record) {
+		try {
+			GelfSender gelfSender = getGelfSender();
+			if (gelfSender != null) {
+				gelfSender.sendMessage(getFormatter().format(record));
 			}
+		} catch (GelfSenderException exception) {
+			reportError("Error during sending GELF message. Error code: " + exception.getErrorCode() + ".",
+					exception.getCause(), ErrorManager.WRITE_FAILURE);
+		} catch (GelfSenderConfigurationException exception) {
+			reportError(exception.getMessage(), exception.getCauseException(), ErrorManager.WRITE_FAILURE);
+		} catch (GelfMessageBuilderException exception) {
+			reportError("Could not create GELF message", exception, ErrorManager.WRITE_FAILURE);
+		} catch (Exception exception) {
+			reportError("Could not send GELF message", exception, ErrorManager.WRITE_FAILURE);
 		}
+	}
+
+	public synchronized GelfSender getGelfSender() {
+		if (null == gelfSender && !closed) {
+			gelfSender = GelfSenderFactory.getInstance().createSender(senderConfiguration);
+		}
+		return gelfSender;
 	}
 
 	@Override
@@ -98,47 +94,6 @@ public class GelfHandler extends Handler {
 			gelfSender = null;
 		}
 		closed = true;
-	}
-
-	private GelfMessage makeMessage(LogRecord record) throws GelfMessageBuilderException {
-		String message = getFormatter().format(record);
-
-		GelfMessageBuilder builder = new GelfMessageBuilder(gelfMessageBuilderConfiguration);
-
-		Map<String, ? extends Object> fields;
-		if (record instanceof GelfLogRecord) {
-			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
-			fields = gelfLogRecord.getFields();
-		} else if (fieldExtractor != null) {
-			fields = fieldExtractor.getFields(record);
-		} else {
-			fields = null;
-		}
-		builder.setMessage(message);
-		builder.setThrowable(record.getThrown());
-		builder.setLevel(String.valueOf(levelToSyslogLevel(record.getLevel())));
-		builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, Thread.currentThread().getName());
-		builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, record.getLevel());
-		builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, record.getLoggerName());
-		builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, record.getSourceClassName());
-		builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, record.getSourceMethodName());
-		builder.addFields(fields);
-
-		return builder.build();
-	}
-
-	private int levelToSyslogLevel(Level level) {
-		final int syslogLevel;
-		if (level.intValue() == Level.SEVERE.intValue()) {
-			syslogLevel = 3;
-		} else if (level.intValue() == Level.WARNING.intValue()) {
-			syslogLevel = 4;
-		} else if (level.intValue() == Level.INFO.intValue()) {
-			syslogLevel = 6;
-		} else {
-			syslogLevel = 7;
-		}
-		return syslogLevel;
 	}
 
 	public synchronized void setGelfSender(GelfSender gelfSender) {

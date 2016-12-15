@@ -9,8 +9,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
-import org.graylog2.message.GelfMessage;
-
 public class GelfTCPSender implements GelfSender {
 	private boolean shutdown;
 	private String host;
@@ -31,12 +29,12 @@ public class GelfTCPSender implements GelfSender {
 		this.bufferManager = new TCPBufferManager();
 	}
 
-	public synchronized void sendMessage(GelfMessage message) throws GelfSenderException {
+	public synchronized void sendMessage(String message) throws GelfSenderException {
 		try {
 			if (shutdown) {
 				throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
 			}
-			send(bufferManager.toTCPBuffer(message.toJson()));
+			send(bufferManager.toTCPBuffer(message));
 		} catch (Exception exception) {
 			closeConnection();
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, exception);

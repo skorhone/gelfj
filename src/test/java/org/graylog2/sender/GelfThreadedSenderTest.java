@@ -1,15 +1,12 @@
 package org.graylog2.sender;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.graylog2.message.GelfMessage;
-import org.graylog2.message.TestGelfMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,16 +32,16 @@ public class GelfThreadedSenderTest {
 	@Test
 	public void testQueueOfferSuccess() throws GelfSenderException {
 		mockSender.allowSend();
-		sender.sendMessage(new TestGelfMessage());
+		sender.sendMessage("");
 	}
 
 	@Test
 	public void testQueueOfferFull() throws GelfSenderException {
-		sender.sendMessage(new TestGelfMessage());
-		sender.sendMessage(new TestGelfMessage());
-		sender.sendMessage(new TestGelfMessage());
+		sender.sendMessage("");
+		sender.sendMessage("");
+		sender.sendMessage("");
 		try {
-			sender.sendMessage(new TestGelfMessage());
+			sender.sendMessage("");
 			fail("Exception is expected");
 		} catch (GelfSenderException exception) {
 			assertEquals(GelfSenderException.ERROR_CODE_GENERIC_ERROR, exception.getErrorCode());
@@ -59,7 +56,7 @@ public class GelfThreadedSenderTest {
 	public void testQueueOfferAfterClose() {
 		sender.close();
 		try {
-			sender.sendMessage(new TestGelfMessage());
+			sender.sendMessage("");
 			fail("Exception is expected");
 		} catch (GelfSenderException exception) {
 			assertEquals(GelfSenderException.ERROR_CODE_SHUTTING_DOWN, exception.getErrorCode());
@@ -68,10 +65,8 @@ public class GelfThreadedSenderTest {
 
 	@Test
 	public void testQueueFinishesProcessingAfterClose() throws GelfSenderException {
-		GelfMessage messageOne = new TestGelfMessage();
-		GelfMessage messageTwo = new TestGelfMessage();
-		sender.sendMessage(messageOne);
-		sender.sendMessage(messageTwo);
+		sender.sendMessage("1");
+		sender.sendMessage("2");
 		Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
 			public void run() {
 				mockSender.allowSend();
@@ -80,18 +75,18 @@ public class GelfThreadedSenderTest {
 		}, 500, TimeUnit.MILLISECONDS);
 		sender.close();
 
-		assertSame(messageTwo, mockSender.getLastMessage());
+		assertEquals("2", mockSender.getLastMessage());
 	}
 
 	public static class MockGelfSender implements GelfSender {
 		private Semaphore semaphore;
-		private GelfMessage lastMessage;
+		private String lastMessage;
 
 		public MockGelfSender() {
 			semaphore = new Semaphore(0);
 		}
 
-		public void sendMessage(GelfMessage message) {
+		public void sendMessage(String message) {
 			try {
 				semaphore.acquire();
 			} catch (InterruptedException exception) {
@@ -99,7 +94,7 @@ public class GelfThreadedSenderTest {
 			this.lastMessage = message;
 		}
 
-		public GelfMessage getLastMessage() {
+		public String getLastMessage() {
 			return lastMessage;
 		}
 

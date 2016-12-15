@@ -1,6 +1,6 @@
 package org.graylog2.logging;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.Enumeration;
@@ -8,62 +8,60 @@ import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+import org.graylog2.message.GelfMessageBuilderConfiguration;
+import org.junit.Before;
 import org.junit.Test;
 
-public class SimpleFormatterTest {
+public class GelfFormatterTest {
+	private GelfFormatter gelfFormatter;
+
+	@Before
+	public void setup() {
+		GelfFormatterConfiguration gelfFormatterConfiguration = new GelfFormatterConfiguration();
+		GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
+		gelfFormatter = new GelfFormatter(gelfFormatterConfiguration, gelfMessageBuilderConfiguration);
+	}
+
 	@Test
 	public void testLogFormattingWithParameter() {
-		SimpleFormatter simpleFormatter = new SimpleFormatter();
-
 		LogRecord record = new LogRecord(Level.FINE, "logging param: {0}");
 		record.setParameters(new Object[] { "param1" });
 
-		assertEquals("logging param: param1", simpleFormatter.format(record));
+		assertTrue(gelfFormatter.format(record).contains("logging param: param1"));
 	}
 
 	@Test
 	public void testLogFormattingWithParameters() {
-		SimpleFormatter simpleFormatter = new SimpleFormatter();
-
 		LogRecord record = new LogRecord(Level.FINE, "logging params: {0} {1}");
 		record.setParameters(new Object[] { new Integer(1), "param2" });
 
-		assertEquals("logging params: 1 param2", simpleFormatter.format(record));
+		assertTrue(gelfFormatter.format(record).contains("logging params: 1 param2"));
 	}
 
 	@Test
 	public void testLogFormattingWithPercentParameters() {
-		SimpleFormatter simpleFormatter = new SimpleFormatter();
-
 		LogRecord record = new LogRecord(Level.FINE, "logging params: %d %s");
 		record.setParameters(new Object[] { new Integer(1), "param2" });
 
-		assertEquals("logging params: 1 param2", simpleFormatter.format(record));
+		assertTrue(gelfFormatter.format(record).contains("logging params: 1 param2"));
 	}
 
 	@Test
 	public void testLogFormattingWithPercentParameters_InvalidParameters() {
-		SimpleFormatter simpleFormatter = new SimpleFormatter();
-
 		LogRecord record = new LogRecord(Level.FINE, "logging params: %d %d");
 		record.setParameters(new Object[] { new Integer(1), "param2" });
 
-		assertEquals("logging params: %d %d", simpleFormatter.format(record));
+		assertTrue(gelfFormatter.format(record).contains("logging params: %d %d"));
 	}
 
 	@Test
 	public void testNullLogWithParameters() {
-		SimpleFormatter simpleFormatter = new SimpleFormatter();
-
 		LogRecord record = new LogRecord(Level.FINE, null);
 		record.setParameters(new Object[] { new Integer(1), "param2" });
-
-		assertEquals("", simpleFormatter.format(record));
 	}
 
 	@Test
 	public void testResolveFromResourceBundle() {
-		SimpleFormatter simpleFormatter = new SimpleFormatter();
 		LogRecord record = new LogRecord(Level.FINE, "X100");
 		record.setResourceBundle(new ResourceBundle() {
 			@Override
@@ -79,6 +77,6 @@ public class SimpleFormatterTest {
 				return Collections.enumeration(Collections.singleton("X100"));
 			}
 		});
-		assertEquals("Message from bundle", simpleFormatter.format(record));
+		assertTrue(gelfFormatter.format(record).contains("Message from bundle"));
 	}
 }

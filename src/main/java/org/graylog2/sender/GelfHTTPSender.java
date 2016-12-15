@@ -8,8 +8,6 @@ import java.net.URL;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.graylog2.message.GelfMessage;
-
 public class GelfHTTPSender implements GelfSender {
 	private final URL url;
 	private boolean shutdown;
@@ -20,7 +18,7 @@ public class GelfHTTPSender implements GelfSender {
 		timeout = configuration.getSendTimeout();
 	}
 
-	public synchronized void sendMessage(GelfMessage message) throws GelfSenderException {
+	public synchronized void sendMessage(String message) throws GelfSenderException {
 		if (shutdown) {
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
 		}
@@ -28,7 +26,7 @@ public class GelfHTTPSender implements GelfSender {
 			HttpURLConnection connection = connect();
 			DeflaterOutputStream outputStream = new GZIPOutputStream(connection.getOutputStream());
 			try {
-				outputStream.write(message.toJson().getBytes("utf-8"));
+				outputStream.write(message.getBytes("utf-8"));
 			} finally {
 				outputStream.close();
 			}

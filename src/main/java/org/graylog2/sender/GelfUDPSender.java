@@ -12,8 +12,6 @@ import java.nio.channels.Selector;
 import java.security.SecureRandom;
 import java.util.Random;
 
-import org.graylog2.message.GelfMessage;
-
 public class GelfUDPSender implements GelfSender {
 	private String destinationHost;
 	private int destinationPort;
@@ -35,10 +33,10 @@ public class GelfUDPSender implements GelfSender {
 		this.bufferManager = new UDPBufferManager();
 	}
 
-	public synchronized void sendMessage(GelfMessage message) throws GelfSenderException {
+	public synchronized void sendMessage(String message) throws GelfSenderException {
 		int tries = 0;
 		Exception lastException = null;
-		ByteBuffer[] datagrams = bufferManager.getUDPBuffers(message.toJson());
+		ByteBuffer[] datagrams = bufferManager.getUDPBuffers(message);
 		do {
 			if (shutdown) {
 				throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);

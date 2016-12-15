@@ -2,26 +2,27 @@ package org.graylog2.logging;
 
 import java.io.IOException;
 
-import org.graylog2.message.GelfMessage;
 import org.graylog2.sender.GelfSender;
 
 /**
  * @author lkmikkel
  */
 public class MockGelfHandlerSender implements GelfSender {
-    private GelfMessage lastMessage;
+	private String lastMessage;
 
-    public MockGelfHandlerSender() throws IOException {
-    }
+	public MockGelfHandlerSender() throws IOException {
+	}
 
-    public void sendMessage(GelfMessage message) {
-        lastMessage = message;
-    }
-    
-    public void close() {
-    }
+	@Override
+	public void sendMessage(String message) {
+		lastMessage = message;
+	}
 
-    public GelfMessage getLastMessage() {
-        return lastMessage;
-    }
+	@Override
+	public void close() {
+	}
+
+	public String getLastMessage() {
+		return lastMessage;
+	}
 }
