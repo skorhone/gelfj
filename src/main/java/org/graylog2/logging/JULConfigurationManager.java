@@ -37,13 +37,13 @@ public class JULConfigurationManager {
 		configuration.setTargetURI(getURI(properties));
 		configuration.setThreaded("true".equalsIgnoreCase(properties.getProperty("threaded")));
 		if (queueMaxDepth != null) {
-			configuration.setThreadedQueueMaxDepth(Integer.valueOf(queueMaxDepth));
+			configuration.setThreadedQueueMaxDepth(Integer.parseInt(queueMaxDepth));
 		}
 		if (queueTimeout != null) {
-			configuration.setThreadedQueueTimeout(Integer.valueOf(queueTimeout));
+			configuration.setThreadedQueueTimeout(Integer.parseInt(queueTimeout));
 		}
 		if (maxRetries != null) {
-			configuration.setMaxRetries(Integer.valueOf(maxRetries));
+			configuration.setMaxRetries(Integer.parseInt(maxRetries));
 		}
 		return configuration;
 	}

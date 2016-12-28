@@ -5,7 +5,7 @@ import java.util.Arrays;
 public class ExceptionTracker {
 	private Throwable previousThrowable;
 	
-	public boolean isRepeating(Throwable throwable) {
+	public synchronized boolean isRepeating(Throwable throwable) {
 		if (previousThrowable != null) {
 			if (areSame(throwable, previousThrowable)) {
 				return true;

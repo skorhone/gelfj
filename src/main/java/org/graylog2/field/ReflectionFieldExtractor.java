@@ -61,7 +61,7 @@ public class ReflectionFieldExtractor implements FieldExtractor {
 		public Map<String, ? extends Object> getFields(Object provider) {
 			try {
 				return (Map<String, ? extends Object>) (getMethod != null ? getMethod.invoke(provider) : null);
-			} catch (Exception exception) {
+			} catch (Exception ignoredException) {
 			}
 			return null;
 		}

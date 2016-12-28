@@ -84,7 +84,7 @@ public class JSON {
 					sb.append("\\r");
 					break;
 				default:
-					sb.append(String.format("\\u%04X", c));
+					sb.append(String.format("\\u%04X", (int)c));
 					break;
 				}
 			} else if (c == '"' || c == '/' || c == '\\') {

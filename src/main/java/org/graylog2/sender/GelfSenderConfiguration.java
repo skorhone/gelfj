@@ -99,7 +99,7 @@ public class GelfSenderConfiguration {
 	public int getSendTimeout() {
 		String sendTimeout = getURIOption("sendTimeout");
 		if (sendTimeout != null) {
-			return Integer.valueOf(sendTimeout);
+			return Integer.parseInt(sendTimeout);
 		}
 		return 1000;
 	}
@@ -107,7 +107,7 @@ public class GelfSenderConfiguration {
 	public int getSendBufferSize() {
 		String sendBufferSize = getURIOption("sendBufferSize");
 		if (sendBufferSize != null) {
-			return Integer.valueOf(sendBufferSize);
+			return Integer.parseInt(sendBufferSize);
 		}
 		return 0;
 	}

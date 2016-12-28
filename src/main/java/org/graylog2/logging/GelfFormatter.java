@@ -34,12 +34,15 @@ public class GelfFormatter extends Formatter {
 
 	@Override
 	public String formatMessage(LogRecord record) throws GelfMessageBuilderException {
+		if (record == null) {
+			return null;
+		}
 		GelfMessageBuilder builder = new GelfMessageBuilder(gelfMessageBuilderConfiguration);
 
 		Map<String, ? extends Object> fields;
-		if (record == null) {
-			fields = null;
-		} else if (record instanceof GelfLogRecord) {
+		builder.setMessage(formatMessageField(record));
+		builder.setThrowable(record.getThrown());
+		if (record instanceof GelfLogRecord) {
 			GelfLogRecord gelfLogRecord = (GelfLogRecord) record;
 			fields = gelfLogRecord.getFields();
 		} else if (gelfFormatterConfiguration.getFieldExtractor() != null) {
@@ -47,18 +50,16 @@ public class GelfFormatter extends Formatter {
 		} else {
 			fields = null;
 		}
-		builder.setMessage(formatMessageField(record));
-		builder.setThrowable(record.getThrown());
 		builder.setLevel(String.valueOf(levelToSyslogLevel(record.getLevel())));
-		builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, Thread.currentThread().getName());
 		builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, record.getLevel());
 		builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, record.getLoggerName());
+		builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, Thread.currentThread().getName());
 		if (gelfFormatterConfiguration.isIncludeLocation()) {
 			builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, record.getSourceClassName());
 			builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, record.getSourceMethodName());
 		}
 		builder.addFields(fields);
-
+		
 		return builder.build().toJson();
 	}
 

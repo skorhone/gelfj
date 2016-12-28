@@ -64,8 +64,9 @@ public class GelfThreadedSender implements GelfSender {
 			if (isInitialized()) {
 				status = Status.CLOSE_WAITING;
 				try {
-					messageQueue.offer(CLOSE_MESSAGE);
-					thread.join(SHUTDOWN_TIMEOUT);
+					if (messageQueue.offer(CLOSE_MESSAGE, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS)) {
+						thread.join(SHUTDOWN_TIMEOUT);
+					}
 				} catch (InterruptedException ignoredException) {
 				}
 				if (thread.isAlive()) {

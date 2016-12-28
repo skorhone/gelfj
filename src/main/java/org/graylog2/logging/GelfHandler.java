@@ -29,6 +29,7 @@ public class GelfHandler extends Handler {
 	}
 
 	private void configure(JULProperties properties) {
+		this.exceptionTracker = new ExceptionTracker();
 		final String level = properties.getProperty("level");
 		if (null != level) {
 			setLevel(Level.parse(level.trim()));
@@ -60,7 +61,10 @@ public class GelfHandler extends Handler {
 		try {
 			GelfSender gelfSender = getGelfSender();
 			if (gelfSender != null) {
-				gelfSender.sendMessage(getFormatter().format(record));
+				String message = getFormatter().format(record);
+				if (message != null) {
+					gelfSender.sendMessage(message);
+				}
 			}
 		} catch (GelfSenderException exception) {
 			reportError("Error during sending GELF message. Error code: " + exception.getErrorCode() + ".",
