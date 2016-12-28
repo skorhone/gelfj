@@ -44,7 +44,7 @@ public class GelfMessage {
 		for (Entry<String, Object> entry : getAdditionalFields().entrySet()) {
 			message.put("_" + entry.getKey(), entry.getValue());
 		}
-		return JSON.encode(message, new StringBuilder()).toString();
+		return JSON.encode(message, new StringBuilder()).append("\r\n").toString();
 	}
 
 	public String getVersion() {

@@ -3,6 +3,7 @@ package org.graylog2.logging;
 import java.util.Map;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
 import org.graylog2.message.GelfMessageBuilder;
@@ -10,13 +11,20 @@ import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.message.GelfMessageBuilderException;
 
 public class GelfFormatter extends Formatter {
-	private final GelfFormatterConfiguration gelfFormatterConfiguration;
-	private final GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
+	private GelfFormatterConfiguration gelfFormatterConfiguration;
+	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 
-	public GelfFormatter(GelfFormatterConfiguration gelfFormatterConfiguration,
-			GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration) {
-		this.gelfFormatterConfiguration = gelfFormatterConfiguration;
-		this.gelfMessageBuilderConfiguration = gelfMessageBuilderConfiguration;
+	public GelfFormatter() {
+		configure(new JULProperties(LogManager.getLogManager(), System.getProperties(), getClass().getName()));
+	}
+
+	public GelfFormatter(JULProperties properties) {
+		configure(properties);
+	}
+
+	private void configure(JULProperties properties) {
+		this.gelfFormatterConfiguration = JULConfigurationManager.getGelfFormatterConfiguration(properties);
+		this.gelfMessageBuilderConfiguration = JULConfigurationManager.getGelfMessageBuilderConfiguration(properties);
 	}
 
 	@Override

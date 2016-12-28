@@ -66,8 +66,8 @@ public class GelfMessageBuilder {
 		gelfMessage.setJavaTimestamp(timestamp);
 		gelfMessage.setHost(configuration.getOriginHost());
 		gelfMessage.setShortMessage(message);
-		if (throwable != null) {
-			gelfMessage.setFullMessage(format(message, throwable, configuration.isExtractStacktrace()));
+		if (throwable != null && configuration.isExtractStacktrace()) {
+			gelfMessage.setFullMessage(format(message, throwable));
 		}
 		gelfMessage.setLevel(level);
 		if (additionalFields != null) {
@@ -81,18 +81,11 @@ public class GelfMessageBuilder {
 		return gelfMessage;
 	}
 
-	private String format(String message, Throwable throwable, boolean extractStacktrace) {
-		StringBuilder sb = new StringBuilder(message);
-		if (throwable != null) {
-			sb.append("\r\n");
-			StringWriter writer = new StringWriter();
-			if (extractStacktrace) {
-				throwable.printStackTrace(new PrintWriter(writer));
-			} else {
-				writer.append(throwable.toString());
-			}
-			sb.append(writer.toString());
-		}
-		return sb.toString();
+	private String format(String message, Throwable throwable) {
+		StringWriter writer = new StringWriter(2000);
+		writer.write(message);
+		writer.append("\r\n");
+		throwable.printStackTrace(new PrintWriter(writer));
+		return writer.toString();
 	}
 }

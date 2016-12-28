@@ -44,7 +44,8 @@ GelfAppender supports the following options:
 - **originHost**: Name of the originating host; defaults to the local hostname (*optional*)
 - **extractStacktrace** (true/false): Add stacktraces to the GELF message; default true (*optional*)
 - **addExtendedInformation** (true/false): Add extended information like Log4j's NDC/MDC; default false (*optional*)
-- **includeLocation** (true/false): Include caller file name and line number. Log4j documentation warns that generating caller location information is extremely slow and should be avoided unless execution speed is not an issue; default false (*optional*)
+- **fieldExtractor** (class name): Field extractor, which is used to extract additional fields from log events / records; default ReflectionFieldExtractor
+- **includeLocation** (true/false): Include caller location. Generating caller location information is relatively slow and should be avoided unless execution speed is not an issue; default false (*optional*)
 - **maxRetries** (integer): Maximum number of send retries; default 5 (*optional*)
 - **threaded** (true/false): Dispatch messages using sender thread; default false (*optional*)
 - **threadedQueueMaxDepth** (integer): Maximum queue depth; default 1000 (*optional*)
@@ -106,15 +107,6 @@ Or, in the log4j.properties format:
     # Send all INFO logs to graylog2
     log4j.rootLogger=INFO, graylog2
 
-Automatically populating fields from a JSON message
-------------
-
-`GelfJsonAppender` is also available at `org.graylog2.log.GelfJsonAppender`. This appender is exactly the same as `GelfAppender` except that if you give it a parseable JSON string in the log4j message, then it will automatically set additional fields according to that JSON.
-
-For example, given the log4j message `"{\"simpleProperty\":\"hello gelf\"}"`, the `GelfJsonAppender` will automatically add the additional field *simpleProperty* to your GELF logging. These fields are in addition to everything else. 
-
-The `GelfJsonAppender` is fail safe. If the given log4j message cannot be parsed as JSON, then the message will still be logged, but there will be no additional fields derived from the message.
-
 Logging Handler
 ---------------
 
@@ -131,6 +123,19 @@ Configured via properties as a standard Handler like
     #org.graylog2.logging.GelfHandler.additionalField.1 = foo2=bah2
 
     .handlers=org.graylog2.logging.GelfHandler
+    
+Logging Formatter
+-----------------
+Configured via properties
+
+    handlers = java.util.logging.ConsoleHandler
+    
+    java.util.logging.ConsoleHandler.formatter=org.graylog2.logging.GelfFormatter
+    
+    org.graylog2.logging.GelfFormatter.extractStacktrace = true
+    org.graylog2.logging.GelfFormatter.additionalField.0 = foo=bar
+    org.graylog2.logging.GelfFormatter.additionalField.1 = bar=heck
+    org.graylog2.logging.GelfFormatter.facility = test    
 
 What is GELF
 ------------

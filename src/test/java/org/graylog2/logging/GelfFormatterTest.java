@@ -8,7 +8,6 @@ import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,9 +16,7 @@ public class GelfFormatterTest {
 
 	@Before
 	public void setup() {
-		GelfFormatterConfiguration gelfFormatterConfiguration = new GelfFormatterConfiguration();
-		GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
-		gelfFormatter = new GelfFormatter(gelfFormatterConfiguration, gelfMessageBuilderConfiguration);
+		gelfFormatter = new GelfFormatter();
 	}
 
 	@Test

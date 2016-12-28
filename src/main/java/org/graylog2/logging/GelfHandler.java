@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
-import org.graylog2.message.GelfMessageBuilderConfiguration;
+import org.graylog2.exception.ExceptionTracker;
 import org.graylog2.message.GelfMessageBuilderException;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
@@ -16,12 +16,12 @@ import org.graylog2.sender.GelfSenderException;
 import org.graylog2.sender.GelfSenderFactory;
 
 public class GelfHandler extends Handler {
-	private GelfSenderConfiguration senderConfiguration;
+	private ExceptionTracker exceptionTracker;
 	private GelfSender gelfSender;
 	private boolean closed;
 
 	public GelfHandler() {
-		configure(new JULProperties(LogManager.getLogManager(), System.getProperties(), getClass().getName()));
+		configure(getJULProperties());
 	}
 
 	public GelfHandler(JULProperties properties) {
@@ -29,19 +29,13 @@ public class GelfHandler extends Handler {
 	}
 
 	private void configure(JULProperties properties) {
-		GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration = JULConfigurationManager
-				.getGelfMessageBuilderConfiguration(properties);
-		this.senderConfiguration = JULConfigurationManager.getGelfSenderConfiguration(properties);
-
 		final String level = properties.getProperty("level");
 		if (null != level) {
 			setLevel(Level.parse(level.trim()));
 		} else {
 			setLevel(Level.INFO);
 		}
-
-		setFormatter(new GelfFormatter(JULConfigurationManager.getGelfFormatterConfiguration(properties), gelfMessageBuilderConfiguration));
-
+		setFormatter(new GelfFormatter(properties));
 		final String filter = properties.getProperty("filter");
 		try {
 			if (null != filter) {
@@ -82,6 +76,8 @@ public class GelfHandler extends Handler {
 
 	public synchronized GelfSender getGelfSender() {
 		if (null == gelfSender && !closed) {
+			GelfSenderConfiguration senderConfiguration = JULConfigurationManager
+					.getGelfSenderConfiguration(getJULProperties());
 			gelfSender = GelfSenderFactory.getInstance().createSender(senderConfiguration);
 		}
 		return gelfSender;
@@ -96,7 +92,18 @@ public class GelfHandler extends Handler {
 		closed = true;
 	}
 
+	@Override
+	protected void reportError(String message, Exception error, int type) {
+		if (!exceptionTracker.isRepeating(error)) {
+			super.reportError(message, error, type);
+		}
+	}
+
 	public synchronized void setGelfSender(GelfSender gelfSender) {
 		this.gelfSender = gelfSender;
+	}
+
+	private JULProperties getJULProperties() {
+		return new JULProperties(LogManager.getLogManager(), System.getProperties(), getClass().getName());
 	}
 }
