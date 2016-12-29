@@ -31,7 +31,6 @@ public class GelfLayout extends Layout {
 
 	public GelfLayout() {
 		this.gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
-		this.includeLocation = true;
 		this.fieldExtractor = FieldExtractors.getDefaultInstance();
 	}
 	

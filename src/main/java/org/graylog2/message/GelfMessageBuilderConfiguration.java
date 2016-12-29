@@ -9,9 +9,10 @@ public class GelfMessageBuilderConfiguration {
 	private String originHost;
 	private boolean extractStacktrace;
 	private Map<String, String> additionalFields;
-
+	
 	public GelfMessageBuilderConfiguration() {
 		this.additionalFields = new HashMap<String, String>();
+		this.extractStacktrace = true;
 	}
 
 	public void setFacility(String facility) {
