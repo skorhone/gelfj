@@ -43,9 +43,7 @@ public class GelfAppenderTest {
 
 	@After
 	public void tearDown() {
-		if (gelfAppender.isAddExtendedInformation()) {
-			NDC.clear();
-		}
+		NDC.clear();
 	}
 
 	@Test

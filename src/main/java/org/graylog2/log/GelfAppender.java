@@ -1,19 +1,11 @@
 package org.graylog2.log;
 
-import java.lang.reflect.Method;
 import java.util.logging.ErrorManager;
 
 import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Level;
-import org.apache.log4j.MDC;
+import org.apache.log4j.Layout;
 import org.apache.log4j.spi.ErrorCode;
-import org.apache.log4j.spi.LocationInfo;
 import org.apache.log4j.spi.LoggingEvent;
-import org.graylog2.field.FieldExtractor;
-import org.graylog2.field.FieldExtractors;
-import org.graylog2.message.GelfMessage;
-import org.graylog2.message.GelfMessageBuilder;
-import org.graylog2.message.GelfMessageBuilderConfiguration;
 import org.graylog2.message.GelfMessageBuilderException;
 import org.graylog2.sender.GelfSender;
 import org.graylog2.sender.GelfSenderConfiguration;
@@ -27,30 +19,17 @@ import org.graylog2.sender.GelfSenderFactory;
  * @author Jochen Schalanda
  */
 public class GelfAppender extends AppenderSkeleton {
-	private static final String LOGGER_NDC = "loggerNdc";
-	private static final Method getTimeStamp;
-	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
 	private GelfSenderConfiguration senderConfiguration;
-	private FieldExtractor fieldExtractor;
 	private GelfSender gelfSender;
-	private boolean extractStacktrace;
-	private boolean addExtendedInformation;
-	private boolean includeLocation;
-
-	static {
-		Method method = null;
-		try {
-			method = LoggingEvent.class.getDeclaredMethod("getTimeStamp");
-		} catch (Exception ignoredException) {
-		}
-		getTimeStamp = method;
-	}
 
 	public GelfAppender() {
-		this.gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
 		this.senderConfiguration = new GelfSenderConfiguration();
-		this.includeLocation = true;
-		this.fieldExtractor = FieldExtractors.getDefaultInstance();
+		this.layout = new GelfLayout();
+	}
+	
+	@Override
+	public void setLayout(Layout layout) {
+		throw new UnsupportedOperationException();
 	}
 
 	public String getTargetURI() {
@@ -59,10 +38,6 @@ public class GelfAppender extends AppenderSkeleton {
 
 	public void setTargetURI(String graylogHost) {
 		senderConfiguration.setTargetURI(graylogHost);
-	}
-
-	public void setFieldExtractor(String type) {
-		this.fieldExtractor = FieldExtractors.getInstance(type);
 	}
 
 	public boolean isThreaded() {
@@ -100,56 +75,37 @@ public class GelfAppender extends AppenderSkeleton {
 	public void setMaxRetries(int maxRetries) {
 		senderConfiguration.setMaxRetries(maxRetries);
 	}
-
-	public boolean isExtractStacktrace() {
-		return extractStacktrace;
+	
+	public GelfLayout getLayout() {
+		return (GelfLayout)super.getLayout();
+	}
+	
+	public void setFieldExtractor(String type) {
+		getLayout().setFieldExtractor(type);
 	}
 
 	public void setExtractStacktrace(boolean extractStacktrace) {
-		this.extractStacktrace = extractStacktrace;
-	}
-
-	public String getOriginHost() {
-		return gelfMessageBuilderConfiguration.getOriginHost();
+		getLayout().setExtractStacktrace(extractStacktrace);
 	}
 
 	public void setOriginHost(String originHost) {
-		gelfMessageBuilderConfiguration.setOriginHost(originHost);
-	}
-
-	public GelfMessageBuilderConfiguration getGelfMessageBuilderConfiguration() {
-		return gelfMessageBuilderConfiguration;
+		getLayout().setOriginHost(originHost);
 	}
 
 	public void setFacility(String facility) {
-		gelfMessageBuilderConfiguration.setFacility(facility);
+		getLayout().setFacility(facility);
 	}
-
-	public void setFields(String encodedFields) {
-		for (String encodedField : encodedFields.split(",")) {
-			int equals = encodedField.indexOf('=');
-			if (equals != -1) {
-				String key = encodedField.substring(0, equals).trim();
-				String value = encodedField.substring(equals + 1).trim();
-				gelfMessageBuilderConfiguration.addAdditionalField(key, value);
-			}
-		}
-	}
-
-	public boolean isAddExtendedInformation() {
-		return addExtendedInformation;
-	}
-
+	
 	public void setAddExtendedInformation(boolean addExtendedInformation) {
-		this.addExtendedInformation = addExtendedInformation;
-	}
-
-	public boolean isIncludeLocation() {
-		return this.includeLocation;
+		getLayout().setAddExtendedInformation(addExtendedInformation);
 	}
 
 	public void setIncludeLocation(boolean includeLocation) {
-		this.includeLocation = includeLocation;
+		getLayout().setIncludeLocation(includeLocation);
+	}
+
+	public void setFields(String encodedFields) {
+		getLayout().setFields(encodedFields);
 	}
 
 	@Override
@@ -173,8 +129,7 @@ public class GelfAppender extends AppenderSkeleton {
 			errorHandler.error("Could not send GELF message. Gelf Sender is not initialised and equals null");
 		} else {
 			try {
-				GelfMessage gelfMessage = createMessage(event);
-				sender.sendMessage(gelfMessage.toJson());
+				sender.sendMessage(getLayout().format(event));
 			} catch (GelfMessageBuilderException exception) {
 				errorHandler.error("Error building GELF message", exception, ErrorCode.WRITE_FAILURE);
 			} catch (GelfSenderException exception) {
@@ -196,62 +151,5 @@ public class GelfAppender extends AppenderSkeleton {
 
 	public boolean requiresLayout() {
 		return true;
-	}
-
-	@SuppressWarnings("unchecked")
-	private GelfMessage createMessage(LoggingEvent event) throws GelfMessageBuilderException {
-		long timeStamp = getTimeStamp(event);
-		Level level = event.getLevel();
-
-		GelfMessageBuilder builder = new GelfMessageBuilder(getGelfMessageBuilderConfiguration());
-
-		if (isIncludeLocation()) {
-			LocationInfo locationInformation = event.getLocationInformation();
-			if (locationInformation != null) {
-				builder.addField(GelfMessageBuilder.CLASS_NAME_FIELD, locationInformation.getClassName());
-				builder.addField(GelfMessageBuilder.METHOD_NAME_FIELD, locationInformation.getMethodName());
-			}
-		}
-
-		builder.setLevel(String.valueOf(level.getSyslogEquivalent()));
-		builder.setTimestamp(timeStamp);
-		builder.setMessage(formatMessage(event));
-		if (event.getThrowableInformation() != null) {
-			builder.setThrowable(event.getThrowableInformation().getThrowable());
-		}
-
-		if (isAddExtendedInformation()) {
-			builder.addField(GelfMessageBuilder.THREAD_NAME_FIELD, event.getThreadName());
-			builder.addField(GelfMessageBuilder.NATIVE_LEVEL_FIELD, level.toString());
-			builder.addField(GelfMessageBuilder.LOGGER_NAME_FIELD, event.getLoggerName());
-			builder.addFields(MDC.getContext());
-			String ndc = event.getNDC();
-			if (ndc != null) {
-				builder.addField(LOGGER_NDC, event.getNDC());
-			}
-		}
-		if (fieldExtractor != null) {
-			builder.addFields(fieldExtractor.getFields(event.getMessage()));
-		}
-		return builder.build();
-	}
-
-	private String formatMessage(LoggingEvent event) {
-		String renderedMessage = layout != null ? layout.format(event) : event.getRenderedMessage();
-		if (renderedMessage == null) {
-			renderedMessage = "";
-		}
-		return renderedMessage;
-	}
-
-	private long getTimeStamp(LoggingEvent event) {
-		long timeStamp = 0;
-		if (getTimeStamp != null) {
-			try {
-				timeStamp = (Long) getTimeStamp.invoke(event);
-			} catch (Exception ignoredException) {
-			}
-		}
-		return timeStamp == 0 ? System.currentTimeMillis() : timeStamp;
 	}
 }

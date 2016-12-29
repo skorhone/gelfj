@@ -56,7 +56,7 @@ public class JULConfigurationManager {
 				: FieldExtractors.getDefaultInstance();
 
 		gelfFormatterConfiguration
-				.setIncludeLocation(!"false".equalsIgnoreCase(properties.getProperty("includeLocation")));
+				.setIncludeLocation("true".equalsIgnoreCase(properties.getProperty("includeLocation")));
 		gelfFormatterConfiguration.setFieldExtractor(fieldExtractor);
 
 		return gelfFormatterConfiguration;
