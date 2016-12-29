@@ -2,7 +2,7 @@ package org.graylog2.log;
 
 import java.lang.reflect.Method;
 
-import org.apache.log4j.Layout;
+import org.apache.log4j.EnhancedPatternLayout;
 import org.apache.log4j.Level;
 import org.apache.log4j.MDC;
 import org.apache.log4j.spi.LocationInfo;
@@ -12,7 +12,7 @@ import org.graylog2.field.FieldExtractors;
 import org.graylog2.message.GelfMessageBuilder;
 import org.graylog2.message.GelfMessageBuilderConfiguration;
 
-public class GelfLayout extends Layout {
+public class GelfLayout extends EnhancedPatternLayout {
 	private static final String LOGGER_NDC = "loggerNdc";
 	private static final Method getTimeStamp;
 	private GelfMessageBuilderConfiguration gelfMessageBuilderConfiguration;
@@ -32,6 +32,7 @@ public class GelfLayout extends Layout {
 	public GelfLayout() {
 		this.gelfMessageBuilderConfiguration = new GelfMessageBuilderConfiguration();
 		this.fieldExtractor = FieldExtractors.getDefaultInstance();
+		setConversionPattern("%m");
 	}
 	
 	public void setOriginHost(String originHost) {
@@ -123,7 +124,7 @@ public class GelfLayout extends Layout {
 	}
 
 	private String formatMessage(LoggingEvent event) {
-		String renderedMessage = event.getRenderedMessage();
+		String renderedMessage = super.format(event);
 		if (renderedMessage == null) {
 			renderedMessage = "";
 		}

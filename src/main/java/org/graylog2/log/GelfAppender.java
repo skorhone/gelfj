@@ -29,7 +29,10 @@ public class GelfAppender extends AppenderSkeleton {
 	
 	@Override
 	public void setLayout(Layout layout) {
-		throw new UnsupportedOperationException();
+		if (! (layout instanceof GelfLayout)) {
+			throw new IllegalArgumentException("Only GelfLayout is supported!");
+		}
+		this.layout = layout;
 	}
 
 	public String getTargetURI() {

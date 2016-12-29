@@ -99,13 +99,28 @@ Or, in the log4j.properties format:
     log4j.appender.graylog2=org.graylog2.log.GelfAppender
     log4j.appender.graylog2.targetURI=tcp://graylog2.example.com:12001
     log4j.appender.graylog2.originHost=my.machine.example.com
-    log4j.appender.graylog2.layout=org.apache.log4j.PatternLayout
     log4j.appender.graylog2.extractStacktrace=true
     log4j.appender.graylog2.addExtendedInformation=true
     log4j.appender.graylog2.fields=environment=DEV, application=MyAPP
 
     # Send all INFO logs to graylog2
     log4j.rootLogger=INFO, graylog2
+    
+Log4j layout
+------------
+
+Configured via log4j.properties:
+
+    # Define the console destination
+    log4j.appender.console=org.apache.log4j.ConsoleAppender
+    log4j.appender.console.layout=org.graylog2.log.GelfLayout
+    log4j.appender.console.layout.originHost=my.machine.example.com
+    log4j.appender.console.layout.extractStacktrace=true
+    log4j.appender.console.layout.addExtendedInformation=true
+    log4j.appender.console.layout.fields=environment=DEV, application=MyAPP
+
+    # Send all INFO logs to console
+    log4j.rootLogger=INFO, console
 
 Logging Handler
 ---------------
