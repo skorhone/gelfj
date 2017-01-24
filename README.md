@@ -46,10 +46,12 @@ GelfAppender supports the following options:
 - **addExtendedInformation** (true/false): Add extended information like Log4j's NDC/MDC; default false (*optional*)
 - **fieldExtractor** (class name): Field extractor, which is used to extract additional fields from log events / records; default ReflectionFieldExtractor
 - **includeLocation** (true/false): Include caller location. Generating caller location information is relatively slow and should be avoided unless execution speed is not an issue; default false (*optional*)
-- **maxRetries** (integer): Maximum number of send retries; default 5 (*optional*)
+- **reenableTimeout** (integer): Timeout in milliseconds for setting disabled circuit in half-open state; default 1000 (*optional*)
+- **errorCountThreshold** (integer): Maximum number of errors before breaking the circuit; default 5 (*optional*)
+- **maxRetries** (integer): Maximum number of send retries before giving up with error; default 5 (*optional*)
 - **threaded** (true/false): Dispatch messages using sender thread; default false (*optional*)
 - **threadedQueueMaxDepth** (integer): Maximum queue depth; default 1000 (*optional*)
-- **threadedQueueTimeout** (integer): Timeout in milliseconds for waiting free space in the queue; default 1000 (*optional*)
+- **threadedQueueTimeout** (integer): Timeout in milliseconds for waiting free space in the queue; default 100 (*optional*)
 
 targetURI format
 ----------------
