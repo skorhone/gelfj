@@ -16,6 +16,7 @@ public class GelfThreadedSender implements GelfSender {
 	private final int timeout;
 	private final int maxRetries;
 	private Thread thread;
+	private volatile boolean previousOfferSuccess;
 	private volatile Status status;
 
 	public GelfThreadedSender(GelfSender sender, GelfSenderConfiguration configuration) {
@@ -24,6 +25,7 @@ public class GelfThreadedSender implements GelfSender {
 		this.timeout = configuration.getThreadedQueueTimeout();
 		this.maxRetries = configuration.getMaxRetries();
 		this.messageQueue = new ArrayBlockingQueue<String>(configuration.getThreadedQueueMaxDepth(), true);
+		this.previousOfferSuccess = true;
 	}
 
 	public void sendMessage(String message) throws GelfSenderException {
@@ -34,7 +36,14 @@ public class GelfThreadedSender implements GelfSender {
 			initialize();
 		}
 		try {
-			if (!messageQueue.offer(message, timeout, TimeUnit.MILLISECONDS)) {
+			boolean offerSuccess;
+			if (previousOfferSuccess) {
+				offerSuccess = messageQueue.offer(message, timeout, TimeUnit.MILLISECONDS);
+			} else {
+				offerSuccess = messageQueue.offer(message);
+			}
+			previousOfferSuccess = offerSuccess;
+			if (!offerSuccess) {
 				throw new InterruptedException("GelfThreadedSender queue is full, discarding message");
 			}
 		} catch (Exception exception) {

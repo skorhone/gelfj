@@ -24,9 +24,9 @@ public class GelfSenderFactory {
 			if ("tcp".equals(configuration.getProtocol())) {
 				gelfSender = new GelfTCPSender(configuration);
 			} else if ("udp".equals(configuration.getProtocol())) {
-				gelfSender = new GelfUDPSender(configuration, !configuration.isThreaded());
+				gelfSender = new GelfUDPSender(configuration);
 			} else if ("amqp".equals(configuration.getProtocol())) {
-				gelfSender = new GelfAMQPSender(configuration, !configuration.isThreaded());
+				gelfSender = new GelfAMQPSender(configuration);
 			} else if ("http".equals(configuration.getProtocol()) || "https".equals(configuration.getProtocol())) {
 				gelfSender = new GelfHTTPSender(configuration);
 			} else {
@@ -34,6 +34,8 @@ public class GelfSenderFactory {
 			}
 			if (configuration.isThreaded()) {
 				gelfSender = new GelfThreadedSender(gelfSender, configuration);
+			} else if (configuration.getMaxRetries() > 1) {
+				gelfSender = new GelfRetrySender(gelfSender, configuration);
 			}
 			return gelfSender;
 		} catch (UnknownHostException e) {

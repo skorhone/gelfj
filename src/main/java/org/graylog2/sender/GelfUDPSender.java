@@ -17,43 +17,34 @@ public class GelfUDPSender implements GelfSender {
 	private int destinationPort;
 	private int sendTimeout;
 	private int sendBufferSize;
-	private int maxRetries;
 	private UDPBufferManager bufferManager;
 	private SocketAddress destinationAddress;
 	private Selector selector;
 	private DatagramChannel channel;
 	private boolean shutdown;
 
-	public GelfUDPSender(GelfSenderConfiguration configuration, boolean enableRetry) {
+	public GelfUDPSender(GelfSenderConfiguration configuration) {
 		this.destinationHost = configuration.getTargetHost();
 		this.destinationPort = configuration.getTargetPort();
 		this.sendBufferSize = configuration.getSendBufferSize();
 		this.sendTimeout = configuration.getSendTimeout();
-		this.maxRetries = enableRetry ? configuration.getMaxRetries() : 0;
 		this.bufferManager = new UDPBufferManager();
 	}
 
 	public synchronized void sendMessage(String message) throws GelfSenderException {
-		int tries = 0;
 		Exception lastException = null;
 		ByteBuffer[] datagrams = bufferManager.getUDPBuffers(message);
-		do {
-			if (shutdown) {
-				throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+		if (shutdown) {
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
+		}
+		try {
+			for (ByteBuffer datagram : datagrams) {
+				sendDatagram(datagram);
 			}
-			try {
-				for (ByteBuffer datagram : datagrams) {
-					sendDatagram(datagram);
-				}
-				return;
-			} catch (Exception exception) {
-				tries++;
-				lastException = exception;
-				closeConnection();
-			}
-		} while (tries <= maxRetries);
-
-		throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
+		} catch (Exception exception) {
+			closeConnection();
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
+		}
 	}
 
 	public synchronized void close() {

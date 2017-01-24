@@ -19,15 +19,13 @@ public class GelfAMQPSender implements GelfSender {
 	private AMQPBufferManager bufferManager;
 	private final String exchangeName;
 	private final String routingKey;
-	private final int maxRetries;
 
-	public GelfAMQPSender(GelfSenderConfiguration configuration, boolean enableRetry)
+	public GelfAMQPSender(GelfSenderConfiguration configuration)
 			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
 		this.factory = new ConnectionFactory();
 		this.factory.setUri(configuration.getTargetURI());
 		this.exchangeName = configuration.getURIOption("exchange");
 		this.routingKey = configuration.getURIOption("routingKey");
-		this.maxRetries = enableRetry ? configuration.getMaxRetries() : 0;
 		this.bufferManager = new AMQPBufferManager();
 	}
 
@@ -38,20 +36,12 @@ public class GelfAMQPSender implements GelfSender {
 		String uuid = UUID.randomUUID().toString();
 		String messageid = "gelf-" + uuid;
 
-		int tries = 0;
-		Exception lastException = null;
-		do {
-			try {
-				send(messageid, message);
-				return;
-			} catch (Exception exception) {
-				closeConnection();
-				tries++;
-				lastException = exception;
-			}
-		} while (tries <= maxRetries);
-
-		throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
+		try {
+			send(messageid, message);
+		} catch (Exception exception) {
+			closeConnection();
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, exception);
+		}
 	}
 
 	private void send(String messageid, String message) throws IOException, InterruptedException {
@@ -63,8 +53,7 @@ public class GelfAMQPSender implements GelfSender {
 		propertiesBuilder.contentEncoding("gzip");
 		propertiesBuilder.messageId(messageid);
 		BasicProperties properties = propertiesBuilder.build();
-		channel.basicPublish(exchangeName, routingKey, properties,
-				bufferManager.toAMQPBuffer(message));
+		channel.basicPublish(exchangeName, routingKey, properties, bufferManager.toAMQPBuffer(message));
 		channel.waitForConfirms();
 	}
 
