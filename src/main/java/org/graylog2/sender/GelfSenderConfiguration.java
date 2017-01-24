@@ -9,18 +9,24 @@ public class GelfSenderConfiguration {
 	public static final int DEFAULT_PORT = 12201;
 	public static final int DEFAULT_RETRIES = 5;
 	public static final int DEFAULT_THREADED_QUEUE_TIMEOUT = 100;
-	public static final int DEFAULT_THREADED_QUEUE_MAX_DEPTH = 100;
+	public static final int DEFAULT_THREADED_QUEUE_MAX_DEPTH = 1000;
+	public static final int DEFAULT_ERROR_COUNT_THRESHOLD = 5;
+	public static final int DEFAULT_REENABLE_TIMEOUT = 1000;
 
 	private URI targetURI;
 	private boolean threaded;
 	private int threadedQueueMaxDepth;
 	private int threadedQueueTimeout;
+	private int reenableTimeout;
+	private int errorCountThreshold;
 	private int maxRetries;
 
 	public GelfSenderConfiguration() {
-		this.maxRetries = DEFAULT_RETRIES;
 		this.threadedQueueTimeout = DEFAULT_THREADED_QUEUE_TIMEOUT;
 		this.threadedQueueMaxDepth = DEFAULT_THREADED_QUEUE_MAX_DEPTH;
+		this.reenableTimeout = DEFAULT_REENABLE_TIMEOUT;
+		this.errorCountThreshold = DEFAULT_ERROR_COUNT_THRESHOLD;
+		this.maxRetries = DEFAULT_RETRIES;
 	}
 
 	public String getTargetURI() {
@@ -75,6 +81,22 @@ public class GelfSenderConfiguration {
 
 	public void setThreadedQueueTimeout(int threadedQueueTimeout) {
 		this.threadedQueueTimeout = threadedQueueTimeout;
+	}
+	
+	public int getErrorCountThreshold() {
+		return errorCountThreshold;
+	}
+	
+	public void setErrorCountThreshold(int errorCountThreshold) {
+		this.errorCountThreshold = errorCountThreshold;
+	}
+	
+	public int getReenableTimeout() {
+		return reenableTimeout;
+	}
+	
+	public void setReenableTimeout(int reenableTimeout) {
+		this.reenableTimeout = reenableTimeout;
 	}
 
 	public int getMaxRetries() {

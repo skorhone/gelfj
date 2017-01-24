@@ -86,6 +86,10 @@ public class GelfAppender extends AbstractAppender {
 		@PluginBuilderAttribute
 		private int threadedQueueTimeout;
 		@PluginBuilderAttribute
+		private int reenableTimeout;
+		@PluginBuilderAttribute
+		private int errorCountThreshold;
+		@PluginBuilderAttribute
 		private int maxRetries;
 		@PluginElement("Layout")
 		@Required(message = "Layout for the GelfAppender must be specified")
@@ -97,6 +101,8 @@ public class GelfAppender extends AbstractAppender {
 			this.threaded = false;
 			this.threadedQueueTimeout = GelfSenderConfiguration.DEFAULT_THREADED_QUEUE_TIMEOUT;
 			this.threadedQueueMaxDepth = GelfSenderConfiguration.DEFAULT_THREADED_QUEUE_MAX_DEPTH;
+			this.reenableTimeout = GelfSenderConfiguration.DEFAULT_REENABLE_TIMEOUT;
+			this.errorCountThreshold = GelfSenderConfiguration.DEFAULT_ERROR_COUNT_THRESHOLD;
 		}
 
 		public Builder setName(String name) {
@@ -145,6 +151,8 @@ public class GelfAppender extends AbstractAppender {
 			gelfSenderConfiguration.setThreaded(threaded);
 			gelfSenderConfiguration.setThreadedQueueMaxDepth(threadedQueueMaxDepth);
 			gelfSenderConfiguration.setThreadedQueueTimeout(threadedQueueTimeout);
+			gelfSenderConfiguration.setReenableTimeout(reenableTimeout);
+			gelfSenderConfiguration.setErrorCountThreshold(errorCountThreshold);
 			gelfSenderConfiguration.setMaxRetries(maxRetries);
 
 			return new GelfAppender(name, filter, layout, gelfSenderConfiguration);

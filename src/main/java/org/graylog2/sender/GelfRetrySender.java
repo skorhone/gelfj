@@ -24,7 +24,7 @@ public class GelfRetrySender implements GelfSender {
 		}
 		throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, firstException);
 	}
-
+	
 	@Override
 	public void close() {
 		gelfSender.close();

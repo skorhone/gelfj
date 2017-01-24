@@ -31,6 +31,8 @@ public class JULConfigurationManager {
 		}
 		String queueMaxDepth = properties.getProperty("threadedQueueMaxDepth");
 		String queueTimeout = properties.getProperty("threadedQueueTimeout");
+		String reenableTimeout = properties.getProperty("reenableTimeout");
+		String errorCountThreshold = properties.getProperty("maxErrors");
 
 		GelfSenderConfiguration configuration = new GelfSenderConfiguration();
 
@@ -41,6 +43,12 @@ public class JULConfigurationManager {
 		}
 		if (queueTimeout != null) {
 			configuration.setThreadedQueueTimeout(Integer.parseInt(queueTimeout));
+		}
+		if (errorCountThreshold != null) {
+			configuration.setErrorCountThreshold(Integer.parseInt(errorCountThreshold));
+		}
+		if (reenableTimeout != null) {
+			configuration.setReenableTimeout(Integer.parseInt(reenableTimeout));
 		}
 		if (maxRetries != null) {
 			configuration.setMaxRetries(Integer.parseInt(maxRetries));

@@ -26,10 +26,10 @@ public class GelfAppender extends AppenderSkeleton {
 		this.senderConfiguration = new GelfSenderConfiguration();
 		this.layout = new GelfLayout();
 	}
-	
+
 	@Override
 	public void setLayout(Layout layout) {
-		if (! (layout instanceof GelfLayout)) {
+		if (!(layout instanceof GelfLayout)) {
 			throw new IllegalArgumentException("Only GelfLayout is supported!");
 		}
 		this.layout = layout;
@@ -71,6 +71,22 @@ public class GelfAppender extends AppenderSkeleton {
 		return senderConfiguration.getSendTimeout();
 	}
 
+	public int getReenableTimeout() {
+		return senderConfiguration.getReenableTimeout();
+	}
+
+	public void setReenableTimeout(int reenableTimeout) {
+		senderConfiguration.setReenableTimeout(reenableTimeout);
+	}
+
+	public int getErrorCountThreshold() {
+		return senderConfiguration.getErrorCountThreshold();
+	}
+
+	public void setErrorCountThreshold(int errorCountThreshold) {
+		senderConfiguration.setErrorCountThreshold(errorCountThreshold);
+	}
+
 	public int getMaxRetries() {
 		return senderConfiguration.getMaxRetries();
 	}
@@ -78,11 +94,11 @@ public class GelfAppender extends AppenderSkeleton {
 	public void setMaxRetries(int maxRetries) {
 		senderConfiguration.setMaxRetries(maxRetries);
 	}
-	
+
 	public GelfLayout getLayout() {
-		return (GelfLayout)super.getLayout();
+		return (GelfLayout) super.getLayout();
 	}
-	
+
 	public void setFieldExtractor(String type) {
 		getLayout().setFieldExtractor(type);
 	}
@@ -98,7 +114,7 @@ public class GelfAppender extends AppenderSkeleton {
 	public void setFacility(String facility) {
 		getLayout().setFacility(facility);
 	}
-	
+
 	public void setAddExtendedInformation(boolean addExtendedInformation) {
 		getLayout().setAddExtendedInformation(addExtendedInformation);
 	}

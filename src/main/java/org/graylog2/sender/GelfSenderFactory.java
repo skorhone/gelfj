@@ -32,6 +32,7 @@ public class GelfSenderFactory {
 			} else {
 				throw new GelfSenderConfigurationException("Unsupported protocol: " + configuration.getProtocol());
 			}
+			gelfSender = new GelfCircuitBreakerSender(gelfSender, configuration);
 			if (configuration.isThreaded()) {
 				gelfSender = new GelfThreadedSender(gelfSender, configuration);
 			} else if (configuration.getMaxRetries() > 1) {
