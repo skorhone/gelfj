@@ -13,7 +13,7 @@ public class GelfCircuitBreakerSender implements GelfSender {
 	public GelfCircuitBreakerSender(GelfSender gelfSender, GelfSenderConfiguration configuration) {
 		this.gelfSender = gelfSender;
 		this.reenableTimeout = TimeUnit.MILLISECONDS.toNanos(configuration.getReenableTimeout());
-		this.errorCountThreshold = configuration.getReenableTimeout();
+		this.errorCountThreshold = configuration.getErrorCountThreshold();
 		this.errorCount = 0;
 		this.halfOpen = false;
 	}
