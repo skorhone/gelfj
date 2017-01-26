@@ -174,7 +174,7 @@
 
 	<ciManagement>
 		<system>Travis CI</system>
-		<url>https://travis-ci.org/t0xa/gelfj</url>
+		<url>https://travis-ci.org/skorhone/gelfj</url>
 	</ciManagement>
 
 	<distributionManagement>
