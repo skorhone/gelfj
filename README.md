@@ -1,5 +1,5 @@
-GELFJ - A GELF Appender for Log4j and a GELF Handler for JDK Logging
-====================================================================
+GELFJ-ALT - A GELF Appender for Log4j and a GELF Handler for JDK Logging
+========================================================================
 
 Downloading
 -----------
@@ -10,15 +10,15 @@ Add the following dependency section to your pom.xml:
       ...
       <dependency>
         <groupId>org.graylog2</groupId>
-        <artifactId>gelfj</artifactId>
-        <version>1.1.14</version>
+        <artifactId>gelfj-alt</artifactId>
+        <version>2.0.0</version>
         <scope>compile</scope>
       </dependency>
       ...
     </dependencies>
 
-What is GELFJ
--------------
+What is GELFJ-ALT
+-----------------
 
 It's very simple GELF implementation in pure Java with the Log4j appender and JDK Logging Handler. It supports chunked messages which allows you to send large log messages (stacktraces, environment variables, additional fields, etc.) to a [Graylog2](http://www.graylog2.org/) server.
 
@@ -29,9 +29,11 @@ Following transports are supported:
  * HTTP
  * AMQP
 
+gelfj-alt is based on gelfj
 
-How to use GELFJ
-----------------
+
+How to use GELFJ-ALT
+--------------------
 
 Drop the latest JAR into your classpath and configure your logging system to use it.
 
