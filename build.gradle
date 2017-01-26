@@ -41,8 +41,10 @@ repositories {
 
 dependencies {
   testCompile 'junit:junit:4.9'
-  testCompile 'com.google.guava:guava:18.0-rc1'
+  testCompile 'com.google.guava:guava:18.0'
   compile "log4j:log4j:1.2.17@jar"
+  compile "org.apache.logging.log4j:log4j-api:2.7@jar"
+  compile "org.apache.logging.log4j:log4j-core:2.7@jar"
   compile "com.googlecode.json-simple:json-simple:1.1"
   compile "com.rabbitmq:amqp-client:3.0.4"
 }
