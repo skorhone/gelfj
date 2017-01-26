@@ -14,9 +14,9 @@ apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
 apply plugin: 'org.dm.bundle'
 
-group = 'org.graylog2.gelfj'
+group = 'org.graylog2.gelfj-alt'
 sourceCompatibility = 1.5
-version = '1.1.9-SNAPSHOT'
+version = '2.0.0-SNAPSHOT'
 
 jar {
 	manifest {
