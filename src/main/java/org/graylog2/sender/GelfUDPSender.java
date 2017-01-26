@@ -32,7 +32,6 @@ public class GelfUDPSender implements GelfSender {
 	}
 
 	public synchronized void sendMessage(String message) throws GelfSenderException {
-		Exception lastException = null;
 		ByteBuffer[] datagrams = bufferManager.getUDPBuffers(message);
 		if (shutdown) {
 			throw new GelfSenderException(GelfSenderException.ERROR_CODE_SHUTTING_DOWN);
@@ -43,7 +42,7 @@ public class GelfUDPSender implements GelfSender {
 			}
 		} catch (Exception exception) {
 			closeConnection();
-			throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, lastException);
+			throw new GelfSenderException(GelfSenderException.ERROR_CODE_GENERIC_ERROR, exception);
 		}
 	}
 
