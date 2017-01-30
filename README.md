@@ -46,7 +46,7 @@ GelfAppender supports the following options:
 - **originHost**: Name of the originating host; defaults to the local hostname (*optional*)
 - **extractStacktrace** (true/false): Add stacktraces to the GELF message; default true (*optional*)
 - **addExtendedInformation** (true/false): Add extended information like Log4j's NDC/MDC; default false (*optional*)
-- **fieldExtractor** (class name): Field extractor, which is used to extract additional fields from log events / records; default ReflectionFieldExtractor
+- **fieldExtractor** (class name): Field extractor, which is used to extract additional fields from log events / records; default org.graylog2.field.ReflectionFieldExtractor
 - **includeLocation** (true/false): Include caller location. Generating caller location information is relatively slow and should be avoided unless execution speed is not an issue; default false (*optional*)
 - **reenableTimeout** (integer): Timeout in milliseconds for setting disabled circuit in half-open state; default 1000 (*optional*)
 - **errorCountThreshold** (integer): Maximum number of errors before breaking the circuit; default 5 (*optional*)
@@ -156,13 +156,3 @@ Configured via properties
     org.graylog2.logging.GelfFormatter.additionalField.1 = bar=heck
     org.graylog2.logging.GelfFormatter.facility = test    
 
-What is GELF
-------------
-
-The Graylog Extended Log Format (GELF) avoids the shortcomings of classic plain syslog:
-
-- Limited to length of 1024 byte
-- Not much space for payloads like stacktraces
-- Unstructured. You can only build a long message string and define priority, severity etc.
-
-You can get more information here: [http://www.graylog2.org/about/gelf](http://www.graylog2.org/about/gelf)
