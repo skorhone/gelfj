@@ -48,10 +48,10 @@ GelfAppender supports the following options:
 - **addExtendedInformation** (true/false): Add extended information like Log4j's NDC/MDC; default false (*optional*)
 - **fieldExtractor** (class name): Field extractor, which is used to extract additional fields from log events / records; default org.graylog2.field.ReflectionFieldExtractor
 - **includeLocation** (true/false): Include caller location. Generating caller location information is relatively slow and should be avoided unless execution speed is not an issue; default false (*optional*)
-- **reenableTimeout** (integer): Timeout in milliseconds for setting disabled circuit in half-open state; default 1000 (*optional*)
-- **errorCountThreshold** (integer): Maximum number of errors before breaking the circuit; default 5 (*optional*)
+- **reenableTimeout** (integer): Timeout in milliseconds for setting open circuit breaker in half-open state; default 1000 (*optional*)
+- **errorCountThreshold** (integer): Maximum number of errors before opening circuit breaker; default 5 (*optional*)
 - **maxRetries** (integer): Maximum number of send retries before giving up with error; default 5 (*optional*)
-- **threaded** (true/false): Dispatch messages using sender thread; default false (*optional*)
+- **threaded** (true/false): Dispatch messages asynchronously using dedicated sender thread; default false (*optional*)
 - **threadedQueueMaxDepth** (integer): Maximum queue depth; default 1000 (*optional*)
 - **threadedQueueTimeout** (integer): Timeout in milliseconds for waiting free space in the queue; default 100 (*optional*)
 
@@ -126,8 +126,28 @@ Configured via log4j.properties:
     # Send all INFO logs to console
     log4j.rootLogger=INFO, console
 
-Logging Handler
+Log4j2 appender
 ---------------
+
+GelfAppender will use the log message as a short message and a stacktrace (if exception available) as a long message if "extractStacktrace" is true.
+
+    # Define the graylog2 destination
+    appender.graylog2.type=Gelf
+    appender.graylog2.name=graylog2
+    appender.graylog2.targetURI=tcp://graylog2.example.com:12001
+    appender.graylog2.layout.type=ExtGelfLayout
+    appender.graylog2.layout.originHost=my.machine.example.com
+    appender.graylog2.layout.extractStacktrace=true
+
+    appenders=graylog2
+    
+    # Send all INFO logs to graylog2
+    rootLogger.level=info
+    rootLogger.appenderRefs=graylog2
+    rootLogger.appenderRef.graylog2.ref=graylog2
+    
+Java Util Logging Handler
+-------------------------
 
 Configured via properties as a standard Handler like
 
