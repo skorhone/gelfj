@@ -169,6 +169,6 @@ public class GelfAppender extends AppenderSkeleton {
 	}
 
 	public boolean requiresLayout() {
-		return true;
+		return false;
 	}
 }
