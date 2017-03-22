@@ -21,12 +21,14 @@ What is GELFJ-ALT
 -----------------
 
 It's a GELF implementation in pure Java with the Log4j appender and JDK Logging Handler. It has following features:
- * Chunked compressed messages
- * UDP, TCP, HTTP and AMQP transports (configurable buffer sizes and timeouts)
- * Custom fields (message and system level)
- * Asynchronous sends (configurable queue size and timeout)
+ * UDP, TCP, HTTP and AMQP transports
+ * Large message support (chunked compressed messages)
+ * Configurable buffer sizes and timeouts
+ * Network failure tolerant (a fault barrier and retry mechanism)
+ * Custom field extraction from messages (extracted using reflection)
+ * Static custom fields (system properties and default log system configuration options)
+ * Asynchronous sending (configurable queue size and timeout)
  * Configuration using System properties
- * Network failure tolerant (implements a fault barrier and retry mechanism)
 
 gelfj-alt is based on gelfj
 
