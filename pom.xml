@@ -2,7 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
+	<groupId>org.graylog2</groupId>
+	<artifactId>gelfj-alt</artifactId>
+	<version>2.0.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<name>gelfj-alt</name>
+	<description>GELF implementation in Java and log4j appender without any dependencies.</description>
+	<url>https://github.com/skorhone/gelfj-alt</url>
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
 		<artifactId>oss-parent</artifactId>
@@ -15,14 +21,6 @@
 		<url>git@github.com:skorhone/gelfj-alt.git</url>
 		<tag>HEAD</tag>
 	</scm>
-
-	<groupId>org.graylog2</groupId>
-	<artifactId>gelfj-alt</artifactId>
-	<version>2.0.0-SNAPSHOT</version>
-	<packaging>jar</packaging>
-	<name>gelfj-alt</name>
-	<description>GELF implementation in Java and log4j appender without any dependencies.</description>
-	<url>https://github.com/skorhone/gelfj-alt</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -58,7 +56,7 @@
 			<version>2.7</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- AMQP (Rabbit MQ) -->		
+		<!-- AMQP (Rabbit MQ) -->
 		<dependency>
 			<groupId>com.rabbitmq</groupId>
 			<artifactId>amqp-client</artifactId>
@@ -96,6 +94,23 @@
 					<source>${java.version}</source>
 					<target>${java.version}</target>
 				</configuration>
+				<executions>
+					<execution>
+						<id>log4j-plugin-processor</id>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<phase>process-classes</phase>
+						<configuration>
+							<proc>only</proc>
+							<annotationProcessors>
+								<annotationProcessor>
+									org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor
+								</annotationProcessor>
+							</annotationProcessors>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -161,6 +176,11 @@
 
 	<developers>
 		<developer>
+			<id>skorhone</id>
+			<name>Sami Korhonen</name>
+			<email>skorhone@gmail.com</email>
+		</developer>
+		<developer>
 			<id>antonyakimov</id>
 			<name>Anton Yakimov</name>
 			<email>anton@tds.lv</email>
@@ -178,8 +198,13 @@
 	</ciManagement>
 
 	<distributionManagement>
+		<snapshotRepository>
+			<id>sonatype-nexus</id>
+			<name>Nexus Snapshot Repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
 		<repository>
-			<id>sonatype-nexus-staging</id>
+			<id>sonatype-nexus</id>
 			<name>Nexus Staging Repository</name>
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
@@ -187,19 +212,50 @@
 
 	<profiles>
 		<profile>
-			<id>release-sign-artifacts</id>
-			<activation>
-				<property>
-					<name>performRelease</name>
-					<value>true</value>
-				</property>
-			</activation>
+			<id>release</id>
 			<build>
 				<plugins>
 					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.7</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>ossrh</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.2.1</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.9.1</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.1</version>
+						<version>1.6</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -209,24 +265,9 @@
 								</goals>
 							</execution>
 						</executions>
-						<configuration>
-							<keyname>anton@tds.lv</keyname>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.3</version>
-						<extensions>true</extensions>
-						<configuration>
-							<serverId>ossrh</serverId>
-							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
-						</configuration>
 					</plugin>
 				</plugins>
 			</build>
 		</profile>
 	</profiles>
-
 </project>
