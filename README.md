@@ -20,14 +20,13 @@ Add the following dependency section to your pom.xml:
 What is GELFJ-ALT
 -----------------
 
-It's very simple GELF implementation in pure Java with the Log4j appender and JDK Logging Handler. It supports chunked messages which allows you to send large log messages (stacktraces, environment variables, additional fields, etc.) to a [Graylog2](http://www.graylog2.org/) server.
-
-Following transports are supported:
-
- * TCP
- * UDP
- * HTTP
- * AMQP
+It's a GELF implementation in pure Java with the Log4j appender and JDK Logging Handler. It has following features:
+ * Chunked compressed messages
+ * UDP, TCP, HTTP and AMQP transports (configurable buffer sizes and timeouts)
+ * Custom fields (message and system level)
+ * Asynchronous sends (configurable queue size and timeout)
+ * Configuration using System properties
+ * Network failure tolerant (implements a fault barrier and retry mechanism)
 
 gelfj-alt is based on gelfj
 
