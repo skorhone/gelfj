@@ -1,8 +1,24 @@
-GELFJ-ALT - A GELF Appender for Log4j and a GELF Handler for JDK Logging
-========================================================================
+# GELFJ-ALT - A GELF Appender for Log4j and a GELF Handler for JDK Logging
 
-Downloading
------------
+## What is GELFJ-ALT
+
+It's a GELF implementation in pure Java with the Log4j appender and JDK Logging Handler. It has following features:
+ * UDP, TCP, HTTP and AMQP transports
+ * Large message support (chunked compressed messages)
+ * Configurable buffer sizes and timeouts
+ * Network failure tolerant (a fault barrier and retry mechanism)
+ * Custom field extraction from messages (extracted using reflection)
+ * Static custom fields (system properties and default log system configuration options)
+ * Asynchronous sending (configurable queue size and timeout)
+ * Configuration using System properties
+
+gelfj-alt is based on gelfj
+
+## How to use GELFJ-ALT
+
+Drop the latest JAR into your classpath and configure your logging system to use it.
+
+## Downloading
 
 Add the following dependency section to your pom.xml:
 
@@ -17,31 +33,9 @@ Add the following dependency section to your pom.xml:
       ...
     </dependencies>
 
-What is GELFJ-ALT
------------------
+## Configuration options
 
-It's a GELF implementation in pure Java with the Log4j appender and JDK Logging Handler. It has following features:
- * UDP, TCP, HTTP and AMQP transports
- * Large message support (chunked compressed messages)
- * Configurable buffer sizes and timeouts
- * Network failure tolerant (a fault barrier and retry mechanism)
- * Custom field extraction from messages (extracted using reflection)
- * Static custom fields (system properties and default log system configuration options)
- * Asynchronous sending (configurable queue size and timeout)
- * Configuration using System properties
-
-gelfj-alt is based on gelfj
-
-
-How to use GELFJ-ALT
---------------------
-
-Drop the latest JAR into your classpath and configure your logging system to use it.
-
-Options
--------
-
-GelfAppender supports the following options:
+Following configuration options are supported:
 
 - **targetURI**: Target uri where client sends the GELF messages to. Currently supported schemes are TCP, UDP, HTTP and AMQP
 - **originHost**: Name of the originating host; defaults to the local hostname (*optional*)
@@ -56,8 +50,7 @@ GelfAppender supports the following options:
 - **threadedQueueMaxDepth** (integer): Maximum queue depth; default 1000 (*optional*)
 - **threadedQueueTimeout** (integer): Timeout in milliseconds for waiting free space in the queue; default 100 (*optional*)
 
-targetURI format
-----------------
+### targetURI format
 
 **UDP**
 
@@ -75,8 +68,9 @@ targetURI format
 
     http://<host>[:<port>][?exchange=<exchange name>&routingKey=<routing key>]
 
-Log4j appender
---------------
+## Log4j
+
+### Appender
 
 GelfAppender will use the log message as a short message and a stacktrace (if exception available) as a long message if "extractStacktrace" is true.
 
@@ -111,8 +105,7 @@ Or, in the log4j.properties format:
     # Send all INFO logs to graylog2
     log4j.rootLogger=INFO, graylog2
     
-Log4j layout
-------------
+### Layout
 
 Configured via log4j.properties:
 
@@ -125,10 +118,39 @@ Configured via log4j.properties:
     log4j.appender.console.layout.fields=environment=DEV, application=MyAPP
 
     # Send all INFO logs to console
-    log4j.rootLogger=INFO, console
+    log4j.rootLogger=INFO, console'
+    
+### Sending custom fields
 
-Log4j2 appender
----------------
+Sending custom fields using default reflection based FieldExtrator is very simple:
+
+    Logger logger = Logger.getLogger("org.example");
+    Map<String, Object> fields = Collections.<String, Object>singletonMap("applicationName", "LOG4JTest");
+    logger.info(new Message("My Message with additional fields", fields));
+	
+    public static class Message {
+        private String description;
+        private Map<String, Object> fields;
+		
+        public Message(String description, Map<String, Object> fields) {
+            this.description = description;
+            this.fields = fields;
+        }
+		
+        public Map<String, Object> getFields() {
+            return fields;
+        }
+		
+        @Override
+        public String toString() {
+            return description;
+        }
+        }
+
+    
+## Log4j2
+
+### Appender
 
 GelfAppender will use the log message as a short message and a stacktrace (if exception available) as a long message if "extractStacktrace" is true.
 
@@ -146,9 +168,10 @@ GelfAppender will use the log message as a short message and a stacktrace (if ex
     rootLogger.level=info
     rootLogger.appenderRefs=graylog2
     rootLogger.appenderRef.graylog2.ref=graylog2
-    
-Java Util Logging Handler
--------------------------
+
+## Java util logging    
+
+### Handler
 
 Configured via properties as a standard Handler like
 
@@ -164,8 +187,8 @@ Configured via properties as a standard Handler like
 
     .handlers=org.graylog2.logging.GelfHandler
     
-Logging Formatter
------------------
+### Formatter
+
 Configured via properties
 
     handlers = java.util.logging.ConsoleHandler
@@ -175,5 +198,25 @@ Configured via properties
     org.graylog2.logging.GelfFormatter.extractStacktrace = true
     org.graylog2.logging.GelfFormatter.additionalField.0 = foo=bar
     org.graylog2.logging.GelfFormatter.additionalField.1 = bar=heck
-    org.graylog2.logging.GelfFormatter.facility = test    
+    org.graylog2.logging.GelfFormatter.facility = test
+    
+### Sending custom fields
 
+    Logger logger = Logger.getLogger("org.example");
+    Map<String, Object> fields = Collections.<String, Object>singletonMap("applicationName", "JULTest");
+    logger.log(new ExtendedLogRecord(Level.INFO, "This is message contains additional fields", fields));
+	}
+	
+    public static class ExtendedLogRecord extends LogRecord {
+        private static final long serialVersionUID = 1L;
+        private Map<String, Object> fields;
+
+        public ExtendedLogRecord(Level level, String msg, Map<String, Object> fields) {
+            super(level, msg);
+            this.fields = fields;
+        }
+		
+        public Map<String, Object> getFields() {
+            return fields;
+        }
+    }
