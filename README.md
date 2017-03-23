@@ -126,7 +126,7 @@ Sending custom fields using default reflection based FieldExtrator is very simpl
 
     Logger logger = Logger.getLogger("org.example");
     Map<String, Object> fields = Collections.<String, Object>singletonMap("applicationName", "LOG4JTest");
-    logger.info(new Message("My Message with additional fields", fields));
+    logger.info(new Message("This message contains additional fields", fields));
 	
     public static class Message {
         private String description;
@@ -168,8 +168,29 @@ GelfAppender will use the log message as a short message and a stacktrace (if ex
     rootLogger.level=info
     rootLogger.appenderRefs=graylog2
     rootLogger.appenderRef.graylog2.ref=graylog2
+    
+### Sending custom fields
 
-## Java util logging    
+    Logger logger = LogManager.getLogger("org.example");
+    Map<String, Object> fields = Collections.<String, Object>singletonMap("applicationName", "LOG4J2Test");
+    Message msg = new ExtendedMessageFormatMessage(fields, "This message contains additional fields");
+    logger.info(msg);
+	
+    public static class ExtendedMessageFormatMessage extends MessageFormatMessage {
+        private Map<String, Object> fields;
+
+        public ExtendedMessageFormatMessage(Map<String, Object> fields, String messagePattern, Object... parameters) {
+            super(messagePattern, parameters);
+            this.fields = fields;
+        }
+
+        public Map<String, ? extends Object> getFields() {
+            return fields;
+        }
+    }
+
+
+## Java util logging
 
 ### Handler
 
@@ -204,7 +225,7 @@ Configured via properties
 
     Logger logger = Logger.getLogger("org.example");
     Map<String, Object> fields = Collections.<String, Object>singletonMap("applicationName", "JULTest");
-    logger.log(new ExtendedLogRecord(Level.INFO, "This is message contains additional fields", fields));
+    logger.log(new ExtendedLogRecord(Level.INFO, "This message contains additional fields", fields));
 	
     public static class ExtendedLogRecord extends LogRecord {
         private static final long serialVersionUID = 1L;
