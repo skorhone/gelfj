@@ -205,7 +205,6 @@ Configured via properties
     Logger logger = Logger.getLogger("org.example");
     Map<String, Object> fields = Collections.<String, Object>singletonMap("applicationName", "JULTest");
     logger.log(new ExtendedLogRecord(Level.INFO, "This is message contains additional fields", fields));
-	}
 	
     public static class ExtendedLogRecord extends LogRecord {
         private static final long serialVersionUID = 1L;
