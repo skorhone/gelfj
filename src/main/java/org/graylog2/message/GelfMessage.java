@@ -79,8 +79,8 @@ public class GelfMessage {
 		this.fullMessage = fullMessage;
 	}
 
-	public String getTimestamp() {
-		return new BigDecimal(javaTimestamp).divide(TIME_DIVISOR).toPlainString();
+	public BigDecimal getTimestamp() {
+		return new BigDecimal(javaTimestamp).divide(TIME_DIVISOR);
 	}
 
 	public Long getJavaTimestamp() {

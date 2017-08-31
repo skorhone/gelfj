@@ -1,5 +1,6 @@
 package org.graylog2.json;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -20,6 +21,9 @@ public class JSON {
 		}
 		if (Collection.class.isAssignableFrom(type)) {
 			return encodeCollection((Collection<? extends Object>)object, sb);
+		}
+		if (BigDecimal.class.isAssignableFrom(type)) {
+			return sb.append(((BigDecimal)object).toPlainString());
 		}
 		if (Number.class.isAssignableFrom(type)) {
 			return sb.append(object.toString());

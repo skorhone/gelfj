@@ -1,6 +1,7 @@
 package org.graylog2.message;
 
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -16,13 +17,14 @@ public class GelfMessageTest {
 		GelfMessage message = new GelfMessage();
 		message.setShortMessage("Short");
 		message.setFullMessage("Long");
-		message.setJavaTimestamp(new Date().getTime());
+		message.setJavaTimestamp(new Date(1).getTime());
 		message.setLevel("1");
 		message.addField("_id", "typos in my closet");
 
 		String data = message.toJson();
 		Map resultingMap = (Map) JSONValue.parse(data);
 		assertNotNull(resultingMap.get("__id"));
+		assertEquals(0.001d, resultingMap.get("timestamp"));
 	}
 
 	@Test
