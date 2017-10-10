@@ -48,13 +48,15 @@ public class JSON {
 		sb.append('{');
 		boolean first = true;
 		for (Entry<? extends Object, ? extends Object> entry : map.entrySet()) {
-			if (!first) {
-				sb.append(", ");
+			if (entry.getValue() != null) {
+				if (!first) {
+					sb.append(", ");
+				}
+				encode(entry.getKey().toString(), sb);
+				sb.append(": ");
+				encode(entry.getValue(), sb);
+				first = false;
 			}
-			encode(entry.getKey().toString(), sb);
-			sb.append(": ");
-			encode(entry.getValue(), sb);
-			first = false;
 		}
 		return sb.append('}');
 	}
